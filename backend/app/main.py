@@ -1,51 +1,48 @@
 """
-RailMind — FastAPI Application
+RailFLOW — FastAPI Application
 
-All 4 engines exposed as REST endpoints.
-Bhoomi's engines: CrowdSignal, PersonalGuard, DisruptionBrain
-Dhruv's engine: Jan Suraksha Bot (RAG on Milvus + Neo4j context)
+Jan Suraksha Bot + Police Dashboard.
+Auth via SQLite. Legal RAG via Zilliz.
 """
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core import shutdown
-from app.routers import crowdsignal, personalguard, disruption, bot
+from app.db import init_db
+from app.routers import bot, complaints, auth
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup — connections are lazy, created on first use
-    print("[railmind] Starting up...")
+    # Startup — init SQLite tables
+    init_db()
+    print("[railflow] Starting up...")
     yield
-    # Shutdown
-    shutdown()
-    print("[railmind] Shut down.")
+    print("[railflow] Shut down.")
 
 
 app = FastAPI(
-    title="RailMind API",
-    description="AI Intelligence Layer for Mumbai Suburban Railways",
-    version="0.1.0",
+    title="RailFLOW API",
+    description="Jan Suraksha Bot — Railway Passenger Safety Platform",
+    version="0.2.0",
     lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Hackathon — open CORS
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ── Mount engine routers ───────────────────────────────────────
-app.include_router(crowdsignal.router, prefix="/api/crowdsignal", tags=["Engine 1 - CrowdSignal"])
-app.include_router(personalguard.router, prefix="/api/guard", tags=["Engine 2 - PersonalGuard"])
-app.include_router(disruption.router, prefix="/api/disruption", tags=["Engine 3 - DisruptionBrain"])
-app.include_router(bot.router, prefix="/api/bot", tags=["Engine 4 - Jan Suraksha Bot"])
+# ── Routers ───────────────────────────────────────────────────
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+app.include_router(bot.router, prefix="/api/bot", tags=["Jan Suraksha Bot"])
+app.include_router(complaints.router, prefix="/api/complaints", tags=["Police Dashboard"])
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "project": "RailMind", "engines": 4}
+    return {"status": "ok", "project": "RailFLOW"}

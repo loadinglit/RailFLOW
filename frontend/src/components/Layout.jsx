@@ -1,33 +1,58 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
-const NAV_ITEMS = [
+const PASSENGER_NAV = [
   { to: '/bot', label: 'Jan Suraksha Bot', icon: '🛡️', desc: 'Legal Aid Chat' },
-  { to: '/crowd', label: 'CrowdSignal', icon: '👥', desc: 'Live Crowd Feed' },
-  { to: '/disruption', label: 'DisruptionBrain', icon: '⚡', desc: 'Cascade & Reroute' },
-  { to: '/alerts', label: 'PersonalGuard', icon: '🔔', desc: 'Proactive Alerts' },
+]
+
+const POLICE_NAV = [
+  { to: '/police', label: 'Police Dashboard', icon: '👮', desc: 'Complaint Tickets' },
 ]
 
 export default function Layout() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const navItems = user?.role === 'police' ? POLICE_NAV : PASSENGER_NAV
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="bg-[#1e3a5f] text-white px-6 py-3 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">
           <div className="text-2xl font-bold tracking-tight">
-            Rail<span className="text-[#ff6b35]">Mind</span>
+            Rail<span className="text-[#ff6b35]">FLOW</span>
           </div>
           <span className="text-xs text-blue-200 hidden sm:block">
-            AI Intelligence Layer for Mumbai Suburban Railways
+            Railway Passenger Safety Platform
           </span>
         </div>
-        <div className="text-xs text-blue-300">
-          mIndicator AI Hackathon 2026
+        <div className="flex items-center gap-4">
+          {user && (
+            <>
+              <div className="text-right hidden sm:block">
+                <div className="text-sm font-medium">{user.name}</div>
+                <div className="text-[10px] text-blue-300 capitalize">{user.role}</div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="text-xs bg-[#ff6b35] hover:bg-[#e55a2b] px-4 py-1.5 rounded-lg transition-colors font-medium"
+              >
+                Logout
+              </button>
+            </>
+          )}
         </div>
       </header>
 
       {/* Nav Tabs */}
       <nav className="bg-white border-b border-gray-200 px-4 flex gap-1 overflow-x-auto">
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

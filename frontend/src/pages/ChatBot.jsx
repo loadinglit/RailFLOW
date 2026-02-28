@@ -1,12 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
-
-const DEMO_USERS = [
-  { id: 'rahul_001', name: 'Rahul', route: 'Virar → Churchgate (WR)' },
-  { id: 'priya_002', name: 'Priya', route: 'Thane → CST (CR)' },
-  { id: 'meena_003', name: 'Meena', route: 'Dadar → Churchgate (WR)' },
-  { id: 'arjun_004', name: 'Arjun', route: 'Bandra → Andheri (WR)' },
-]
+import { useAuth } from '../context/AuthContext'
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -23,12 +17,11 @@ const QUICK_PROMPTS = [
 ]
 
 export default function ChatBot() {
-  const [userId, setUserId] = useState('rahul_001')
-  const [language, setLanguage] = useState('mr')
+  const { user } = useAuth()
+  const [language, setLanguage] = useState(user?.language_pref || 'en')
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [userContext, setUserContext] = useState(null)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -36,14 +29,6 @@ export default function ChatBot() {
   }
 
   useEffect(() => { scrollToBottom() }, [messages])
-
-  // Load user context when user changes
-  useEffect(() => {
-    fetch(`/api/bot/user-context/${userId}`)
-      .then(r => r.json())
-      .then(data => setUserContext(data.context))
-      .catch(() => setUserContext(null))
-  }, [userId])
 
   const sendMessage = async (text) => {
     if (!text.trim()) return
@@ -56,7 +41,7 @@ export default function ChatBot() {
       const res = await fetch('/api/bot/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, message: text, language }),
+        body: JSON.stringify({ user_id: user.id, message: text, language }),
       })
       const data = await res.json()
 
@@ -89,18 +74,15 @@ export default function ChatBot() {
     <div className="flex gap-4 h-[calc(100vh-140px)]">
       {/* Sidebar */}
       <div className="w-72 flex-shrink-0 bg-white rounded-xl shadow-sm p-4 flex flex-col gap-4 overflow-y-auto">
-        {/* User Selector */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Demo User</label>
-          <select
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50"
-          >
-            {DEMO_USERS.map(u => (
-              <option key={u.id} value={u.id}>{u.name} — {u.route}</option>
-            ))}
-          </select>
+        {/* User Info */}
+        <div className="bg-blue-50 rounded-lg p-3">
+          <div className="text-xs font-semibold text-blue-800 mb-2">Your Profile</div>
+          <div className="text-xs text-blue-700 space-y-1">
+            <div><span className="font-medium">Name:</span> {user?.name}</div>
+            {user?.phone && (
+              <div><span className="font-medium">Phone:</span> {user.phone}</div>
+            )}
+          </div>
         </div>
 
         {/* Language Selector */}
@@ -122,19 +104,6 @@ export default function ChatBot() {
             ))}
           </div>
         </div>
-
-        {/* User Context */}
-        {userContext && (
-          <div className="bg-blue-50 rounded-lg p-3">
-            <div className="text-xs font-semibold text-blue-800 mb-2">User Context (Neo4j)</div>
-            <div className="text-xs text-blue-700 space-y-1">
-              <div><span className="font-medium">Name:</span> {userContext.name}</div>
-              <div><span className="font-medium">Route:</span> {userContext.origin} → {userContext.destination}</div>
-              <div><span className="font-medium">Train:</span> {userContext.usual_train}</div>
-              <div><span className="font-medium">Line:</span> {userContext.line}</div>
-            </div>
-          </div>
-        )}
 
         {/* Quick Prompts */}
         <div>
@@ -235,16 +204,31 @@ export default function ChatBot() {
                       )}
                     </div>
 
-                    {/* Complaint Draft Expandable */}
+                    {/* Complaint Draft — Download PDF */}
                     {msg.complaint_draft && (
-                      <details className="mt-2 bg-white rounded-lg border border-gray-200">
-                        <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
-                          📄 View Complaint Draft
-                        </summary>
-                        <div className="px-3 py-2 text-xs whitespace-pre-wrap border-t border-gray-100 bg-gray-50">
-                          {msg.complaint_draft}
-                        </div>
-                      </details>
+                      <button
+                        onClick={() => {
+                          const w = window.open('', '_blank')
+                          w.document.write(`<!DOCTYPE html><html><head><title>Complaint - Jan Suraksha</title><style>
+                            @media print { body { margin: 0; } @page { margin: 1.5cm; } }
+                            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.7; padding: 40px; max-width: 800px; margin: 0 auto; color: #1a1a1a; }
+                            h2 { text-align: center; border-bottom: 2px solid #1e3a5f; padding-bottom: 10px; color: #1e3a5f; }
+                            .meta { font-size: 12px; color: #666; text-align: right; margin-bottom: 20px; }
+                            pre { white-space: pre-wrap; font-family: inherit; font-size: 14px; }
+                            .footer { margin-top: 40px; font-size: 11px; color: #999; text-align: center; border-top: 1px solid #ddd; padding-top: 10px; }
+                          </style></head><body>
+                            <h2>Jan Suraksha — Complaint Document</h2>
+                            <div class="meta">Generated: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}${msg.cpgrams_ref ? ` | Ref: ${msg.cpgrams_ref}` : ''}</div>
+                            <pre>${msg.complaint_draft.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                            <div class="footer">Generated by Jan Suraksha Bot — RailFLOW Platform</div>
+                          </body></html>`)
+                          w.document.close()
+                          setTimeout(() => w.print(), 300)
+                        }}
+                        className="mt-2 w-full flex items-center justify-center gap-2 bg-[#1e3a5f] text-white rounded-lg px-4 py-2.5 text-xs font-medium hover:bg-[#2a4f7f] transition-colors"
+                      >
+                        <span>📄</span> Download Complaint PDF
+                      </button>
                     )}
                   </div>
                 ) : (
