@@ -9,6 +9,9 @@ venv/
 .venv/
 env/
 
+# uv
+.python-version
+
 # Environment
 .env
 .env.local

@@ -9,9 +9,14 @@ Milvus = Vector store (Jan Suraksha Bot only)
 import os
 from dotenv import load_dotenv
 from neo4j import GraphDatabase
-from pymilvus import connections, Collection, utility
 
-load_dotenv()
+from pathlib import Path
+
+# Load .env from project root (works whether run from root or backend/)
+_env_path = Path(__file__).resolve().parents[2] / ".env"
+if not _env_path.exists():
+    _env_path = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(_env_path)
 
 # ── Neo4j Connection (Knowledge Graph) ─────────────────────────
 # Used by: ALL 4 engines
@@ -48,28 +53,20 @@ _milvus_connected = False
 
 def connect_milvus():
     global _milvus_connected
+    from pymilvus import connections
     if not _milvus_connected:
         milvus_uri = os.getenv("MILVUS_URI")
         if milvus_uri:
-            # Zilliz Cloud (managed Milvus)
-            connections.connect(
-                alias="default",
-                uri=milvus_uri,
-                token=os.getenv("MILVUS_TOKEN"),
-            )
+            connections.connect(alias="default", uri=milvus_uri, token=os.getenv("MILVUS_TOKEN"))
         else:
-            # Local Milvus
-            connections.connect(
-                alias="default",
-                host=os.getenv("MILVUS_HOST", "localhost"),
-                port=os.getenv("MILVUS_PORT", "19530"),
-            )
+            connections.connect(alias="default", host=os.getenv("MILVUS_HOST", "localhost"), port=os.getenv("MILVUS_PORT", "19530"))
         _milvus_connected = True
         print("[core] Milvus connected")
 
 
-def get_milvus_collection(name: str) -> Collection:
+def get_milvus_collection(name: str):
     """Get a Milvus collection by name. Connect if needed."""
+    from pymilvus import Collection, utility
     connect_milvus()
     if not utility.has_collection(name):
         raise ValueError(f"Collection '{name}' does not exist in Milvus")
@@ -86,6 +83,7 @@ def shutdown():
         _neo4j_driver.close()
         _neo4j_driver = None
     if _milvus_connected:
+        from pymilvus import connections
         connections.disconnect("default")
         _milvus_connected = False
     print("[core] All connections closed")
