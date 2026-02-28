@@ -110,9 +110,17 @@ class ChatRequest(BaseModel):
     language: str = "en"  # en / hi / mr
 
 
+class ActionOption(BaseModel):
+    """A suggested action the user can take (shown as button in UI)."""
+    id: str
+    label: str
+    description: str
+
+
 class ChatResponse(BaseModel):
     """Bot response with all generated artifacts."""
     response: str
+    options: Optional[list[ActionOption]] = None
     complaint_draft: Optional[str] = None
     authority: Optional[str] = None
     compensation: Optional[str] = None

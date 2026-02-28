@@ -9,6 +9,7 @@ Milvus = Vector store (Jan Suraksha Bot only)
 import os
 from dotenv import load_dotenv
 from neo4j import GraphDatabase
+from openai import OpenAI
 
 from pathlib import Path
 
@@ -45,45 +46,70 @@ def run_cypher(query: str, params: dict = None) -> list:
         return [record.data() for record in result]
 
 
-# ── Milvus Connection (Vector Store for RAG) ───────────────────
+# ── Milvus / Zilliz Connection (Vector Store for RAG) ──────────
 # Used by: Engine 4 (Jan Suraksha Bot) only
 
-_milvus_connected = False
+_milvus_client = None
 
 
-def connect_milvus():
-    global _milvus_connected
-    from pymilvus import connections
-    if not _milvus_connected:
-        milvus_uri = os.getenv("MILVUS_URI")
-        if milvus_uri:
-            connections.connect(alias="default", uri=milvus_uri, token=os.getenv("MILVUS_TOKEN"))
+def get_milvus_client():
+    """Get or create a MilvusClient connected to Zilliz Cloud."""
+    global _milvus_client
+    if _milvus_client is None:
+        from pymilvus import MilvusClient
+        uri = os.getenv("ZILLIZ_URI")
+        token = os.getenv("ZILLIZ_TOKEN")
+        if uri and token:
+            _milvus_client = MilvusClient(uri=uri, token=token)
         else:
-            connections.connect(alias="default", host=os.getenv("MILVUS_HOST", "localhost"), port=os.getenv("MILVUS_PORT", "19530"))
-        _milvus_connected = True
-        print("[core] Milvus connected")
+            # Fallback to local Milvus
+            _milvus_client = MilvusClient(uri="http://localhost:19530")
+        print("[core] Milvus/Zilliz connected")
+    return _milvus_client
 
 
-def get_milvus_collection(name: str):
-    """Get a Milvus collection by name. Connect if needed."""
-    from pymilvus import Collection, utility
-    connect_milvus()
-    if not utility.has_collection(name):
-        raise ValueError(f"Collection '{name}' does not exist in Milvus")
-    collection = Collection(name)
-    collection.load()
-    return collection
+# ── Model Names (LiteLLM proxy uses prefixed names) ───────────
+# Change these if your proxy uses different aliases.
+
+MODEL_SMART = os.getenv("MODEL_SMART", "azure-gpt-4o-mini")
+MODEL_FAST = os.getenv("MODEL_FAST", "azure-gpt-4o-mini")
+MODEL_EMBED = os.getenv("MODEL_EMBED", "text-embedding-3-small")
+
+
+# ── OpenAI Client ──────────────────────────────────────────────
+
+_openai_client = None
+
+
+def get_openai_client() -> OpenAI:
+    """Get or create an OpenAI client."""
+    global _openai_client
+    if _openai_client is None:
+        _openai_client = OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            base_url=os.getenv("OPENAI_BASE_URL") or None,
+        )
+    return _openai_client
+
+
+def embed_text(text: str) -> list[float]:
+    """Embed text using embedding model. Returns 1536-dim vector."""
+    client = get_openai_client()
+    response = client.embeddings.create(
+        model=MODEL_EMBED,
+        input=text,
+    )
+    return response.data[0].embedding
 
 
 # ── Cleanup ────────────────────────────────────────────────────
 
 def shutdown():
-    global _neo4j_driver, _milvus_connected
+    global _neo4j_driver, _milvus_client
     if _neo4j_driver:
         _neo4j_driver.close()
         _neo4j_driver = None
-    if _milvus_connected:
-        from pymilvus import connections
-        connections.disconnect("default")
-        _milvus_connected = False
+    if _milvus_client:
+        _milvus_client.close()
+        _milvus_client = None
     print("[core] All connections closed")
