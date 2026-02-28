@@ -349,7 +349,7 @@ def get_trains_for_route(origin: str, destination: str, dt: datetime) -> list:
     """
     Queries Neo4j for trains on this route.
     Filters by line, direction, and departure time (±15 min window).
-    Returns up to 8 trains.
+    Returns up to 10 trains.
     """
     origin_title = origin.strip().title()
     dest_title = destination.strip().title()
@@ -412,7 +412,7 @@ def get_trains_for_route(origin: str, destination: str, dt: datetime) -> list:
             if t_orig_idx >= orig_idx and t_dest_idx <= dest_idx:
                 filtered.append(train)
 
-        if len(filtered) >= 8:
+        if len(filtered) >= 10:
             break
 
     return filtered
