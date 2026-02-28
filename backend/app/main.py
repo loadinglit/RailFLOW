@@ -1,9 +1,9 @@
 """
-RailMind — FastAPI Application
+RailFlow — FastAPI Application
 
-All 4 engines exposed as REST endpoints.
-Bhoomi's engines: CrowdSignal, PersonalGuard, DisruptionBrain
-Dhruv's engine: Jan Suraksha Bot (RAG on Milvus + Neo4j context)
+Intelligent Train Routing for Mumbai Suburban Railways.
+- Train Search with Crowd Badges (crowd intelligence engine)
+- Jan Suraksha Bot (Dhruv) — Legal aid chatbot
 """
 
 from contextlib import asynccontextmanager
@@ -11,41 +11,45 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import shutdown
-from app.routers import crowdsignal, personalguard, disruption, bot
+from app.routers import trains, bot
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup — connections are lazy, created on first use
-    print("[railmind] Starting up...")
+    print("[railflow] Starting up...")
     yield
-    # Shutdown
     shutdown()
-    print("[railmind] Shut down.")
+    print("[railflow] Shut down.")
 
 
 app = FastAPI(
-    title="RailMind API",
-    description="AI Intelligence Layer for Mumbai Suburban Railways",
-    version="0.1.0",
+    title="RailFlow API",
+    description="Intelligent Train Routing for Mumbai Suburban Railways — mIndicator AI Hackathon 2026",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Hackathon — open CORS
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ── Mount engine routers ───────────────────────────────────────
-app.include_router(crowdsignal.router, prefix="/api/crowdsignal", tags=["Engine 1 - CrowdSignal"])
-app.include_router(personalguard.router, prefix="/api/guard", tags=["Engine 2 - PersonalGuard"])
-app.include_router(disruption.router, prefix="/api/disruption", tags=["Engine 3 - DisruptionBrain"])
-app.include_router(bot.router, prefix="/api/bot", tags=["Engine 4 - Jan Suraksha Bot"])
+# ── Mount routers ─────────────────────────────────────────────
+app.include_router(trains.router, prefix="/api/trains", tags=["Train Search"])
+app.include_router(bot.router, prefix="/api/bot", tags=["Jan Suraksha Bot"])
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "project": "RailMind", "engines": 4}
+    return {
+        "status": "ok",
+        "project": "RailFlow",
+        "version": "2.0.0",
+        "features": {
+            "trains": "Smart train search with crowd badges (GREEN/YELLOW/RED)",
+            "bot": "Jan Suraksha Bot — Legal aid for railway passengers",
+        },
+    }

@@ -1,0 +1,333 @@
+2026-02-28 18:27:38 [railmind.router.bot] INFO — [32mGET /user-context/rahul_001[0m
+2026-02-28 18:27:38 [railmind.jansuraksha.neo4j] INFO — [32mLoading user context for user_id=rahul_001[0m
+2026-02-28 18:27:39 [railmind.jansuraksha.neo4j] WARNING — [33mUser rahul_001 NOT FOUND in Neo4j[0m
+2026-02-28 18:27:39 [railmind.router.bot] WARNING — [33mUser rahul_001 not found in Neo4j[0m
+2026-02-28 18:27:39 [railmind.router.bot] INFO — [32mGET /user-context/rahul_001[0m
+2026-02-28 18:27:39 [railmind.jansuraksha.neo4j] INFO — [32mLoading user context for user_id=rahul_001[0m
+2026-02-28 18:27:40 [railmind.jansuraksha.neo4j] WARNING — [33mUser rahul_001 NOT FOUND in Neo4j[0m
+2026-02-28 18:27:40 [railmind.router.bot] WARNING — [33mUser rahul_001 not found in Neo4j[0m
+2026-02-28 18:28:16 [railmind.router.bot] INFO — [32mGET /user-context/rahul_001[0m
+2026-02-28 18:28:16 [railmind.jansuraksha.neo4j] INFO — [32mLoading user context for user_id=rahul_001[0m
+2026-02-28 18:28:16 [railmind.jansuraksha.neo4j] WARNING — [33mUser rahul_001 NOT FOUND in Neo4j[0m
+2026-02-28 18:28:16 [railmind.router.bot] WARNING — [33mUser rahul_001 not found in Neo4j[0m
+2026-02-28 18:28:16 [railmind.router.bot] INFO — [32mGET /user-context/rahul_001[0m
+2026-02-28 18:28:16 [railmind.jansuraksha.neo4j] INFO — [32mLoading user context for user_id=rahul_001[0m
+2026-02-28 18:28:16 [railmind.jansuraksha.neo4j] WARNING — [33mUser rahul_001 NOT FOUND in Neo4j[0m
+2026-02-28 18:28:16 [railmind.router.bot] WARNING — [33mUser rahul_001 not found in Neo4j[0m
+2026-02-28 18:28:21 [railmind.router.bot] INFO — [32mPOST /chat — user=rahul_001, lang=en, message=hey...[0m
+2026-02-28 18:28:21 [railmind.jansuraksha.agent] INFO — [32m============================================================[0m
+2026-02-28 18:28:21 [railmind.jansuraksha.agent] INFO — [32m[run_agent] user=rahul_001, lang=en, message=hey...[0m
+2026-02-28 18:28:21 [railmind.jansuraksha.agent] INFO — [32m[graph] Compiled with MemorySaver checkpointer[0m
+2026-02-28 18:28:21 [railmind.jansuraksha.agent] INFO — [32m[router] No phase → initial[0m
+2026-02-28 18:28:21 [railmind.jansuraksha.agent] INFO — [32m[load_context] user=rahul_001, message=hey...[0m
+2026-02-28 18:28:21 [railmind.jansuraksha.neo4j] INFO — [32mLoading user context for user_id=rahul_001[0m
+2026-02-28 18:28:21 [railmind.jansuraksha.neo4j] WARNING — [33mUser rahul_001 NOT FOUND in Neo4j[0m
+2026-02-28 18:28:21 [railmind.jansuraksha.agent] INFO — [32m[load_context] Found=False, name=None, route=None→None (None)[0m
+2026-02-28 18:28:21 [railmind.jansuraksha.agent] INFO — [32m[classify] hey...[0m
+2026-02-28 18:28:24 [railmind.jansuraksha.agent] DEBUG — [36m[classify] Raw: {"incident_type": "general", "user_intent": "none"}[0m
+2026-02-28 18:28:24 [railmind.jansuraksha.agent] INFO — [32m[classify] → incident=general, intent=none[0m
+2026-02-28 18:28:24 [railmind.jansuraksha.agent] INFO — [32m[retrieve_legal] incident=general[0m
+2026-02-28 18:28:24 [railmind.jansuraksha.retrieval] INFO — [32mRetrieving: mode=legal_basis, incident_type=general, scope=mumbai, top_k=5[0m
+2026-02-28 18:28:24 [railmind.jansuraksha.retrieval] DEBUG — [36mQuery: hey...[0m
+2026-02-28 18:28:36 [railmind.jansuraksha.agent] ERROR — [31m[retrieve_legal] FAILED: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>[0m
+Traceback (most recent call last):
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/agent.py", line 234, in node_retrieve_legal
+    chunks = retrieve_legal_context(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/retrieval.py", line 75, in retrieve_legal_context
+    client = get_milvus_client()
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/core.py", line 66, in get_milvus_client
+    _milvus_client = MilvusClient(uri="http://localhost:19530")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/milvus_client.py", line 76, in __init__
+    self._using = create_connection(
+                  ^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/_utils.py", line 56, in create_connection
+    connections.connect(
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 437, in connect
+    connect_milvus(**kwargs, user=user, password=password, token=token, db_name=db_name)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 391, in connect_milvus
+    raise e from e
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 385, in connect_milvus
+    gh._wait_for_channel_ready(timeout=timeout)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/client/grpc_handler.py", line 229, in _wait_for_channel_ready
+    raise MilvusException(
+pymilvus.exceptions.MilvusException: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>
+2026-02-28 18:28:36 [railmind.jansuraksha.agent] INFO — [32m[identify_authority] incident=general[0m
+2026-02-28 18:28:36 [railmind.jansuraksha.tools] INFO — [32m[identify_authority] incident=general, station=Unknown, line=WR[0m
+2026-02-28 18:28:36 [railmind.jansuraksha.retrieval] INFO — [32mRetrieving: mode=identify_authority, incident_type=general, scope=mumbai, top_k=3[0m
+2026-02-28 18:28:36 [railmind.jansuraksha.retrieval] DEBUG — [36mQuery: general authority jurisdiction Unknown...[0m
+2026-02-28 18:28:46 [railmind.jansuraksha.agent] ERROR — [31m[identify_authority] FAILED: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>[0m
+Traceback (most recent call last):
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/agent.py", line 252, in node_identify_authority
+    info = identify_authority(state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/tools.py", line 32, in identify_authority
+    chunks = retrieve_legal_context(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/retrieval.py", line 75, in retrieve_legal_context
+    client = get_milvus_client()
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/core.py", line 66, in get_milvus_client
+    _milvus_client = MilvusClient(uri="http://localhost:19530")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/milvus_client.py", line 76, in __init__
+    self._using = create_connection(
+                  ^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/_utils.py", line 56, in create_connection
+    connections.connect(
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 437, in connect
+    connect_milvus(**kwargs, user=user, password=password, token=token, db_name=db_name)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 391, in connect_milvus
+    raise e from e
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 385, in connect_milvus
+    gh._wait_for_channel_ready(timeout=timeout)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/client/grpc_handler.py", line 229, in _wait_for_channel_ready
+    raise MilvusException(
+pymilvus.exceptions.MilvusException: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>
+2026-02-28 18:28:46 [railmind.jansuraksha.agent] INFO — [32m[route_after_analysis] No clear intent → show_options[0m
+2026-02-28 18:28:46 [railmind.jansuraksha.agent] INFO — [32m[suggest_actions] Generating options[0m
+2026-02-28 18:28:49 [railmind.jansuraksha.agent] INFO — [32m[suggest_actions] 3 options: ['know_authority', 'file_complaint', 'know_rights'][0m
+2026-02-28 18:28:49 [railmind.jansuraksha.agent] INFO — [32m[respond_options] Generating empathetic response[0m
+2026-02-28 18:28:50 [railmind.jansuraksha.agent] INFO — [32m[run_agent] DONE — phase=options_shown, output_keys=['response', 'options', 'authority'][0m
+2026-02-28 18:28:50 [railmind.jansuraksha.agent] INFO — [32m============================================================[0m
+2026-02-28 18:28:50 [railmind.router.bot] INFO — [32mPOST /chat — SUCCESS, authority=Unknown, cpgrams=None[0m
+2026-02-28 18:28:55 [railmind.router.bot] INFO — [32mPOST /chat — user=rahul_001, lang=en, message=Someone stole my phone on the train...[0m
+2026-02-28 18:28:55 [railmind.jansuraksha.agent] INFO — [32m============================================================[0m
+2026-02-28 18:28:55 [railmind.jansuraksha.agent] INFO — [32m[run_agent] user=rahul_001, lang=en, message=Someone stole my phone on the train...[0m
+2026-02-28 18:28:55 [railmind.jansuraksha.agent] INFO — [32m[router] options_shown + no match → initial (new grievance)[0m
+2026-02-28 18:28:55 [railmind.jansuraksha.agent] INFO — [32m[load_context] user=rahul_001, message=Someone stole my phone on the train...[0m
+2026-02-28 18:28:55 [railmind.jansuraksha.neo4j] INFO — [32mLoading user context for user_id=rahul_001[0m
+2026-02-28 18:28:56 [railmind.jansuraksha.neo4j] WARNING — [33mUser rahul_001 NOT FOUND in Neo4j[0m
+2026-02-28 18:28:56 [railmind.jansuraksha.agent] INFO — [32m[load_context] Found=False, name=None, route=None→None (None)[0m
+2026-02-28 18:28:56 [railmind.jansuraksha.agent] INFO — [32m[classify] Someone stole my phone on the train...[0m
+2026-02-28 18:28:57 [railmind.jansuraksha.agent] DEBUG — [36m[classify] Raw: {"incident_type": "theft", "user_intent": "none"}[0m
+2026-02-28 18:28:57 [railmind.jansuraksha.agent] INFO — [32m[classify] → incident=theft, intent=none[0m
+2026-02-28 18:28:57 [railmind.jansuraksha.agent] INFO — [32m[retrieve_legal] incident=theft[0m
+2026-02-28 18:28:57 [railmind.jansuraksha.retrieval] INFO — [32mRetrieving: mode=legal_basis, incident_type=theft, scope=mumbai, top_k=5[0m
+2026-02-28 18:28:57 [railmind.jansuraksha.retrieval] DEBUG — [36mQuery: Someone stole my phone on the train...[0m
+2026-02-28 18:29:07 [railmind.jansuraksha.agent] ERROR — [31m[retrieve_legal] FAILED: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>[0m
+Traceback (most recent call last):
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/agent.py", line 234, in node_retrieve_legal
+    chunks = retrieve_legal_context(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/retrieval.py", line 75, in retrieve_legal_context
+    client = get_milvus_client()
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/core.py", line 66, in get_milvus_client
+    _milvus_client = MilvusClient(uri="http://localhost:19530")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/milvus_client.py", line 76, in __init__
+    self._using = create_connection(
+                  ^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/_utils.py", line 56, in create_connection
+    connections.connect(
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 437, in connect
+    connect_milvus(**kwargs, user=user, password=password, token=token, db_name=db_name)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 391, in connect_milvus
+    raise e from e
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 385, in connect_milvus
+    gh._wait_for_channel_ready(timeout=timeout)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/client/grpc_handler.py", line 229, in _wait_for_channel_ready
+    raise MilvusException(
+pymilvus.exceptions.MilvusException: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>
+2026-02-28 18:29:07 [railmind.jansuraksha.agent] INFO — [32m[identify_authority] incident=theft[0m
+2026-02-28 18:29:07 [railmind.jansuraksha.tools] INFO — [32m[identify_authority] incident=theft, station=Unknown, line=WR[0m
+2026-02-28 18:29:07 [railmind.jansuraksha.retrieval] INFO — [32mRetrieving: mode=identify_authority, incident_type=theft, scope=mumbai, top_k=3[0m
+2026-02-28 18:29:07 [railmind.jansuraksha.retrieval] DEBUG — [36mQuery: theft authority jurisdiction Unknown...[0m
+2026-02-28 18:29:17 [railmind.jansuraksha.agent] ERROR — [31m[identify_authority] FAILED: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>[0m
+Traceback (most recent call last):
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/agent.py", line 252, in node_identify_authority
+    info = identify_authority(state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/tools.py", line 32, in identify_authority
+    chunks = retrieve_legal_context(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/retrieval.py", line 75, in retrieve_legal_context
+    client = get_milvus_client()
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/core.py", line 66, in get_milvus_client
+    _milvus_client = MilvusClient(uri="http://localhost:19530")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/milvus_client.py", line 76, in __init__
+    self._using = create_connection(
+                  ^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/_utils.py", line 56, in create_connection
+    connections.connect(
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 437, in connect
+    connect_milvus(**kwargs, user=user, password=password, token=token, db_name=db_name)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 391, in connect_milvus
+    raise e from e
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 385, in connect_milvus
+    gh._wait_for_channel_ready(timeout=timeout)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/client/grpc_handler.py", line 229, in _wait_for_channel_ready
+    raise MilvusException(
+pymilvus.exceptions.MilvusException: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>
+2026-02-28 18:29:17 [railmind.jansuraksha.agent] INFO — [32m[route_after_analysis] No clear intent → show_options[0m
+2026-02-28 18:29:17 [railmind.jansuraksha.agent] INFO — [32m[suggest_actions] Generating options[0m
+2026-02-28 18:29:21 [railmind.jansuraksha.agent] INFO — [32m[suggest_actions] 3 options: ['know_authority', 'file_complaint', 'know_rights'][0m
+2026-02-28 18:29:21 [railmind.jansuraksha.agent] INFO — [32m[respond_options] Generating empathetic response[0m
+2026-02-28 18:29:22 [railmind.jansuraksha.agent] INFO — [32m[run_agent] DONE — phase=options_shown, output_keys=['response', 'options', 'authority'][0m
+2026-02-28 18:29:22 [railmind.jansuraksha.agent] INFO — [32m============================================================[0m
+2026-02-28 18:29:22 [railmind.router.bot] INFO — [32mPOST /chat — SUCCESS, authority=Unknown, cpgrams=None[0m
+2026-02-28 18:29:30 [railmind.router.bot] INFO — [32mPOST /chat — user=rahul_001, lang=en, message=1...[0m
+2026-02-28 18:29:30 [railmind.jansuraksha.agent] INFO — [32m============================================================[0m
+2026-02-28 18:29:30 [railmind.jansuraksha.agent] INFO — [32m[run_agent] user=rahul_001, lang=en, message=1...[0m
+2026-02-28 18:29:30 [railmind.jansuraksha.agent] INFO — [32m[parse_choice] Number 1 → know_authority[0m
+2026-02-28 18:29:30 [railmind.jansuraksha.agent] INFO — [32m[router] options_shown + choice=know_authority → execute[0m
+2026-02-28 18:29:30 [railmind.jansuraksha.agent] INFO — [32m[parse_choice] Number 1 → know_authority[0m
+2026-02-28 18:29:30 [railmind.jansuraksha.agent] INFO — [32m[execute_action] action=know_authority[0m
+2026-02-28 18:29:31 [railmind.jansuraksha.agent] INFO — [32m[run_agent] DONE — phase=action_done, output_keys=['response', 'authority'][0m
+2026-02-28 18:29:31 [railmind.jansuraksha.agent] INFO — [32m============================================================[0m
+2026-02-28 18:29:31 [railmind.router.bot] INFO — [32mPOST /chat — SUCCESS, authority=Unknown, cpgrams=None[0m
+2026-02-28 18:29:41 [railmind.router.bot] INFO — [32mPOST /chat — user=rahul_001, lang=en, message=2...[0m
+2026-02-28 18:29:41 [railmind.jansuraksha.agent] INFO — [32m============================================================[0m
+2026-02-28 18:29:41 [railmind.jansuraksha.agent] INFO — [32m[run_agent] user=rahul_001, lang=en, message=2...[0m
+2026-02-28 18:29:41 [railmind.jansuraksha.agent] INFO — [32m[parse_choice] Number 2 → file_complaint[0m
+2026-02-28 18:29:41 [railmind.jansuraksha.agent] INFO — [32m[router] action_done + another choice=file_complaint → execute[0m
+2026-02-28 18:29:41 [railmind.jansuraksha.agent] INFO — [32m[parse_choice] Number 2 → file_complaint[0m
+2026-02-28 18:29:41 [railmind.jansuraksha.agent] INFO — [32m[execute_action] action=file_complaint[0m
+2026-02-28 18:29:41 [railmind.jansuraksha.tools] INFO — [32m[draft_complaint] Drafting for incident=theft, lang=en, authority=Unknown[0m
+2026-02-28 18:29:41 [railmind.jansuraksha.retrieval] INFO — [32mRetrieving: mode=legal_basis, incident_type=theft, scope=mumbai, top_k=4[0m
+2026-02-28 18:29:41 [railmind.jansuraksha.retrieval] DEBUG — [36mQuery: theft legal section compensation remedy...[0m
+2026-02-28 18:29:51 [railmind.router.bot] ERROR — [31mPOST /chat — FAILED: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>[0m
+Traceback (most recent call last):
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/routers/bot.py", line 34, in chat
+    result = await run_agent(
+             ^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/agent.py", line 778, in run_agent
+    result = await asyncio.to_thread(graph.invoke, input_state, config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/lib/python3.12/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/langgraph/pregel/main.py", line 3094, in invoke
+    for chunk in self.stream(
+                 ^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/langgraph/pregel/main.py", line 2669, in stream
+    for _ in runner.tick(
+             ^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/langgraph/pregel/_runner.py", line 167, in tick
+    run_with_retry(
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/langgraph/pregel/_retry.py", line 71, in run_with_retry
+    return task.proc.invoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/langgraph/_internal/_runnable.py", line 656, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/langgraph/_internal/_runnable.py", line 400, in invoke
+    ret = self.func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/agent.py", line 627, in node_execute_action
+    result = _generate_action_response(action_id, state)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/agent.py", line 432, in _generate_action_response
+    complaint = draft_complaint(state)
+                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/tools.py", line 93, in draft_complaint
+    legal_chunks = retrieve_legal_context(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/retrieval.py", line 75, in retrieve_legal_context
+    client = get_milvus_client()
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/core.py", line 66, in get_milvus_client
+    _milvus_client = MilvusClient(uri="http://localhost:19530")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/milvus_client.py", line 76, in __init__
+    self._using = create_connection(
+                  ^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/_utils.py", line 56, in create_connection
+    connections.connect(
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 437, in connect
+    connect_milvus(**kwargs, user=user, password=password, token=token, db_name=db_name)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 391, in connect_milvus
+    raise e from e
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 385, in connect_milvus
+    gh._wait_for_channel_ready(timeout=timeout)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/client/grpc_handler.py", line 229, in _wait_for_channel_ready
+    raise MilvusException(
+pymilvus.exceptions.MilvusException: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>
+During task with name 'execute_action' and id 'ab2626aa-f3e9-429e-0868-12326521e9b4'
+2026-02-28 22:14:51 [railmind.router.bot] INFO — [32mPOST /chat — user=railflow_user, lang=en, message=im facing issues...[0m
+2026-02-28 22:14:51 [railmind.jansuraksha.agent] INFO — [32m============================================================[0m
+2026-02-28 22:14:51 [railmind.jansuraksha.agent] INFO — [32m[run_agent] user=railflow_user, lang=en, message=im facing issues...[0m
+2026-02-28 22:14:51 [railmind.jansuraksha.agent] INFO — [32m[graph] Compiled with MemorySaver checkpointer[0m
+2026-02-28 22:14:51 [railmind.jansuraksha.agent] INFO — [32m[router] No phase → initial[0m
+2026-02-28 22:14:51 [railmind.jansuraksha.agent] INFO — [32m[load_context] user=railflow_user, message=im facing issues...[0m
+2026-02-28 22:14:51 [railmind.jansuraksha.neo4j] INFO — [32mLoading user context for user_id=railflow_user[0m
+2026-02-28 22:14:51 [railmind.jansuraksha.neo4j] WARNING — [33mUser railflow_user NOT FOUND in Neo4j[0m
+2026-02-28 22:14:51 [railmind.jansuraksha.agent] INFO — [32m[load_context] Found=False, name=None, route=None→None (None)[0m
+2026-02-28 22:14:51 [railmind.jansuraksha.agent] INFO — [32m[classify] im facing issues...[0m
+2026-02-28 22:14:53 [railmind.jansuraksha.agent] DEBUG — [36m[classify] Raw: {"incident_type": "general", "user_intent": "none"}[0m
+2026-02-28 22:14:53 [railmind.jansuraksha.agent] INFO — [32m[classify] → incident=general, intent=none[0m
+2026-02-28 22:14:53 [railmind.jansuraksha.agent] INFO — [32m[retrieve_legal] incident=general[0m
+2026-02-28 22:14:53 [railmind.jansuraksha.retrieval] INFO — [32mRetrieving: mode=legal_basis, incident_type=general, scope=mumbai, top_k=5[0m
+2026-02-28 22:14:53 [railmind.jansuraksha.retrieval] DEBUG — [36mQuery: im facing issues...[0m
+2026-02-28 22:15:03 [railmind.jansuraksha.agent] ERROR — [31m[retrieve_legal] FAILED: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>[0m
+Traceback (most recent call last):
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/agent.py", line 234, in node_retrieve_legal
+    chunks = retrieve_legal_context(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/retrieval.py", line 75, in retrieve_legal_context
+    client = get_milvus_client()
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/core.py", line 66, in get_milvus_client
+    _milvus_client = MilvusClient(uri="http://localhost:19530")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/milvus_client.py", line 76, in __init__
+    self._using = create_connection(
+                  ^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/_utils.py", line 56, in create_connection
+    connections.connect(
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 437, in connect
+    connect_milvus(**kwargs, user=user, password=password, token=token, db_name=db_name)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 391, in connect_milvus
+    raise e from e
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 385, in connect_milvus
+    gh._wait_for_channel_ready(timeout=timeout)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/client/grpc_handler.py", line 229, in _wait_for_channel_ready
+    raise MilvusException(
+pymilvus.exceptions.MilvusException: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>
+2026-02-28 22:15:03 [railmind.jansuraksha.agent] INFO — [32m[identify_authority] incident=general[0m
+2026-02-28 22:15:03 [railmind.jansuraksha.tools] INFO — [32m[identify_authority] incident=general, station=Unknown, line=WR[0m
+2026-02-28 22:15:03 [railmind.jansuraksha.retrieval] INFO — [32mRetrieving: mode=identify_authority, incident_type=general, scope=mumbai, top_k=3[0m
+2026-02-28 22:15:03 [railmind.jansuraksha.retrieval] DEBUG — [36mQuery: general authority jurisdiction Unknown...[0m
+2026-02-28 22:15:13 [railmind.jansuraksha.agent] ERROR — [31m[identify_authority] FAILED: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>[0m
+Traceback (most recent call last):
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/agent.py", line 252, in node_identify_authority
+    info = identify_authority(state)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/tools.py", line 32, in identify_authority
+    chunks = retrieve_legal_context(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/engines/jansuraksha/retrieval.py", line 75, in retrieve_legal_context
+    client = get_milvus_client()
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/backend/app/core.py", line 66, in get_milvus_client
+    _milvus_client = MilvusClient(uri="http://localhost:19530")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/milvus_client.py", line 76, in __init__
+    self._using = create_connection(
+                  ^^^^^^^^^^^^^^^^^^
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/milvus_client/_utils.py", line 56, in create_connection
+    connections.connect(
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 437, in connect
+    connect_milvus(**kwargs, user=user, password=password, token=token, db_name=db_name)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 391, in connect_milvus
+    raise e from e
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/orm/connections.py", line 385, in connect_milvus
+    gh._wait_for_channel_ready(timeout=timeout)
+  File "/Users/bhoomikasingh/Documents/scogo-work/RailFLOW/.venv/lib/python3.12/site-packages/pymilvus/client/grpc_handler.py", line 229, in _wait_for_channel_ready
+    raise MilvusException(
+pymilvus.exceptions.MilvusException: <MilvusException: (code=2, message=Fail connecting to server on localhost:19530, illegal connection params or server unavailable)>
+2026-02-28 22:15:13 [railmind.jansuraksha.agent] INFO — [32m[route_after_analysis] No clear intent → show_options[0m
+2026-02-28 22:15:13 [railmind.jansuraksha.agent] INFO — [32m[suggest_actions] Generating options[0m
+2026-02-28 22:15:18 [railmind.jansuraksha.agent] INFO — [32m[suggest_actions] 3 options: ['know_authority', 'file_complaint', 'know_rights'][0m
+2026-02-28 22:15:18 [railmind.jansuraksha.agent] INFO — [32m[respond_options] Generating empathetic response[0m
+2026-02-28 22:15:19 [railmind.jansuraksha.agent] INFO — [32m[run_agent] DONE — phase=options_shown, output_keys=['response', 'options', 'authority'][0m
+2026-02-28 22:15:19 [railmind.jansuraksha.agent] INFO — [32m============================================================[0m
+2026-02-28 22:15:19 [railmind.router.bot] INFO — [32mPOST /chat — SUCCESS, authority=Unknown, cpgrams=None[0m
