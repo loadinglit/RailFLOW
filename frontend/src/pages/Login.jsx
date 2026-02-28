@@ -16,7 +16,7 @@ export default function Login() {
     setLoading(true)
     try {
       const user = await login(email, password)
-      navigate(user.role === 'police' ? '/police' : '/bot')
+      navigate(user.role === 'police' ? '/police' : '/')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -25,47 +25,51 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1e3a5f] to-[#0d1b2a] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">
-            Rail<span className="text-[#ff6b35]">FLOW</span>
-          </h1>
-          <p className="text-blue-200 text-sm mt-1">Railway Passenger Safety Platform</p>
+    <div className="min-h-screen bg-gray-50 max-w-sm mx-auto relative">
+      {/* Header — matches PassengerHome */}
+      <div className="bg-gradient-to-b from-blue-700 to-blue-800 pt-14 pb-8 px-6 shadow-lg">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+            <span className="text-white font-black text-sm">m</span>
+          </div>
+          <span className="text-white font-black text-xl tracking-tight">Indicator</span>
+          <span className="text-blue-300 text-xs font-semibold bg-blue-600/60 px-1.5 py-0.5 rounded">AI</span>
         </div>
+        <p className="text-blue-300 text-xs">Mumbai Local · Powered by RailFlow</p>
+        <p className="text-white font-bold text-lg mt-4">Welcome back</p>
+        <p className="text-blue-300 text-xs mt-0.5">Sign in to continue</p>
+      </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Sign In</h2>
-
+      {/* Form */}
+      <div className="px-5 -mt-2">
+        <div className="bg-white rounded-2xl shadow-lg p-6">
           {error && (
-            <div className="mb-4 bg-red-50 text-red-700 text-sm rounded-lg px-4 py-3 border border-red-200">
+            <div className="mb-4 bg-red-50 text-red-700 text-xs rounded-lg px-3 py-2.5 border border-red-200">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-widest pl-1">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff6b35] focus:ring-1 focus:ring-[#ff6b35]"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder="your@email.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-widest pl-1">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff6b35] focus:ring-1 focus:ring-[#ff6b35]"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder="Enter password"
               />
             </div>
@@ -73,15 +77,20 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#ff6b35] text-white py-3 rounded-xl font-semibold hover:bg-[#e55a2b] transition-colors disabled:opacity-50"
+              className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-sm"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Signing in...
+                </span>
+              ) : 'Sign In'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
+          <p className="mt-5 text-center text-xs text-gray-400">
             Don't have an account?{' '}
-            <Link to="/signup" className="text-[#ff6b35] font-semibold hover:underline">
+            <Link to="/signup" className="text-blue-600 font-semibold hover:underline">
               Sign Up
             </Link>
           </p>

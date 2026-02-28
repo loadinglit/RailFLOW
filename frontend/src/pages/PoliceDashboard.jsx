@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 const STATUS_COLORS = {
   filed: 'bg-red-100 text-red-800',
-  acknowledged: 'bg-yellow-100 text-yellow-800',
-  resolved: 'bg-green-100 text-green-800',
-  rejected: 'bg-gray-100 text-gray-800',
+  acknowledged: 'bg-amber-100 text-amber-800',
+  resolved: 'bg-emerald-100 text-emerald-800',
+  rejected: 'bg-gray-200 text-gray-700',
 }
 
 const SEVERITY_COLORS = {
   low: 'bg-blue-100 text-blue-800',
-  medium: 'bg-yellow-100 text-yellow-800',
+  medium: 'bg-amber-100 text-amber-800',
   high: 'bg-orange-100 text-orange-800',
   critical: 'bg-red-100 text-red-800',
 }
@@ -22,9 +24,8 @@ const INCIDENT_ICONS = {
   stampede: '🏃', general: '📋',
 }
 
-/**
- * Open a print-ready window with the FIR/complaint formatted as a proper police document.
- */
+const STATUS_OPTIONS = ['', 'filed', 'acknowledged', 'resolved', 'rejected']
+
 function downloadComplaintPDF(complaint) {
   const w = window.open('', '_blank', 'width=800,height=1000')
   if (!w) return alert('Please allow popups to download the PDF')
@@ -33,10 +34,8 @@ function downloadComplaintPDF(complaint) {
     || complaint.complaint_text?.includes('प्रथम सूचना रिपोर्ट')
     || complaint.complaint_text?.includes('प्रथम खबरी अहवाल')
   const isCPGRAMS = complaint.complaint_text?.includes('CPGRAMS')
-    || complaint.complaint_text?.includes('सीपीजीआरएएमएस')
   const isRCT = complaint.complaint_text?.includes('RAILWAY CLAIMS TRIBUNAL')
     || complaint.complaint_text?.includes('रेलवे दावा अधिकरण')
-    || complaint.complaint_text?.includes('रेल्वे दावे न्यायाधिकरण')
 
   let docTitle = 'Complaint Document'
   if (isGRPFIR) docTitle = 'First Information Report (FIR)'
@@ -48,76 +47,41 @@ function downloadComplaintPDF(complaint) {
   htmlBody = `<pre style="font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">${htmlBody}</pre>`
 
   w.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${docTitle} — ${complaint.ref}</title>
-  <style>
-    @page { margin: 20mm 15mm; size: A4; }
-    body {
-      font-family: 'Courier New', 'Noto Sans Devanagari', monospace;
-      margin: 0; padding: 20px;
-      color: #000;
-    }
-    .header {
-      text-align: center; border-bottom: 2px solid #000;
-      padding-bottom: 10px; margin-bottom: 15px;
-    }
-    .header h2 { margin: 0; font-size: 16px; }
-    .header .ref { font-size: 11px; color: #555; margin-top: 4px; }
-    .meta { font-size: 11px; color: #333; margin-bottom: 15px;
-      display: flex; justify-content: space-between; }
-    .doc-body pre {
-      font-family: 'Courier New', 'Noto Sans Devanagari', monospace;
-      font-size: 12px; line-height: 1.6;
-      white-space: pre-wrap; word-wrap: break-word;
-    }
-    .footer {
-      margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc;
-      font-size: 10px; color: #777; text-align: center;
-    }
-    .no-print { margin: 20px 0; text-align: center; }
-    .no-print button {
-      padding: 10px 30px; font-size: 14px; cursor: pointer;
-      background: #1e3a5f; color: white; border: none;
-      border-radius: 6px; margin: 0 5px;
-    }
-    .no-print button:hover { background: #2a4f7f; }
-    @media print { .no-print { display: none; } }
-  </style>
-</head>
-<body>
-  <div class="no-print">
-    <button onclick="window.print()">Print / Save as PDF</button>
-    <button onclick="window.close()">Close</button>
-  </div>
-  <div class="header">
-    <h2>${docTitle}</h2>
-    <div class="ref">Reference: ${complaint.ref} | Status: ${(complaint.status || '').toUpperCase()}</div>
-  </div>
-  <div class="meta">
-    <span>Complainant: ${complaint.user_name || 'N/A'}</span>
-    <span>Incident: ${(complaint.incident_type || '').replace('_', ' ').toUpperCase()}</span>
-    <span>Severity: ${(complaint.severity || '').toUpperCase()}</span>
-  </div>
+<html><head><meta charset="utf-8"><title>${docTitle} — ${complaint.ref}</title>
+<style>
+  @page { margin: 20mm 15mm; size: A4; }
+  body { font-family: 'Courier New', 'Noto Sans Devanagari', monospace; margin: 0; padding: 20px; color: #000; }
+  .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+  .header h2 { margin: 0; font-size: 16px; }
+  .header .ref { font-size: 11px; color: #555; margin-top: 4px; }
+  .meta { font-size: 11px; color: #333; margin-bottom: 15px; display: flex; justify-content: space-between; }
+  .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 10px; color: #777; text-align: center; }
+  .no-print { margin: 20px 0; text-align: center; }
+  .no-print button { padding: 10px 30px; font-size: 14px; cursor: pointer; background: #1d4ed8; color: white; border: none; border-radius: 6px; margin: 0 5px; }
+  @media print { .no-print { display: none; } }
+</style></head><body>
+  <div class="no-print"><button onclick="window.print()">Print / Save as PDF</button><button onclick="window.close()">Close</button></div>
+  <div class="header"><h2>${docTitle}</h2><div class="ref">Reference: ${complaint.ref} | Status: ${(complaint.status || '').toUpperCase()}</div></div>
+  <div class="meta"><span>Complainant: ${complaint.user_name || 'N/A'}</span><span>Incident: ${(complaint.incident_type || '').replace('_', ' ').toUpperCase()}</span><span>Severity: ${(complaint.severity || '').toUpperCase()}</span></div>
   <div class="doc-body">${htmlBody}</div>
-  <div class="footer">
-    Generated by Jan Suraksha Bot — RailFLOW Platform | ${new Date().toLocaleString('en-IN')}
-  </div>
-</body>
-</html>`)
+  <div class="footer">Generated by Jan Suraksha Bot — RailFLOW Platform | ${new Date().toLocaleString('en-IN')}</div>
+</body></html>`)
   w.document.close()
 }
 
+// ── Icons ──────────────────────────────────────────────
+const IconRefresh = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+
 export default function PoliceDashboard() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
   const [complaints, setComplaints] = useState([])
   const [loading, setLoading] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [actionLoading, setActionLoading] = useState(null)
-
-  // Modal state for resolve/reject notes
-  const [modal, setModal] = useState(null) // { ref, action, note }
+  const [modal, setModal] = useState(null)
 
   const fetchComplaints = async () => {
     setLoading(true)
@@ -155,8 +119,11 @@ export default function PoliceDashboard() {
     }
   }
 
-  const openModal = (ref, action) => {
-    setModal({ ref, action, note: '' })
+  const openModal = (ref, action) => setModal({ ref, action, note: '' })
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
   }
 
   // Stats
@@ -166,203 +133,195 @@ export default function PoliceDashboard() {
     resolved: complaints.filter(c => c.status === 'resolved').length,
     rejected: complaints.filter(c => c.status === 'rejected').length,
   }
-  const total = complaints.length
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-      {/* Left: Filters + Stats */}
-      <div className="space-y-4">
-        {/* Stats */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="font-semibold text-sm mb-3">Complaint Stats</div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-600">Total</span>
-              <span className="text-lg font-bold text-[#1e3a5f]">{total}</span>
-            </div>
-            <div className="h-px bg-gray-100" />
-            {Object.entries(stats).map(([status, count]) => (
-              <div key={status} className="flex items-center justify-between">
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${STATUS_COLORS[status]}`}>
-                  {status.toUpperCase()}
-                </span>
-                <span className="text-sm font-semibold">{count}</span>
+    <div className="min-h-screen bg-gray-50 max-w-sm mx-auto relative">
+
+      {/* ── HEADER ── */}
+      <div className="bg-gradient-to-b from-blue-700 to-blue-800 pt-10 pb-5 px-4 shadow-lg">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+                <span className="text-white font-black text-xs">m</span>
               </div>
-            ))}
+              <span className="text-white font-black text-lg tracking-tight">Indicator</span>
+              <span className="text-blue-300 text-xs font-semibold bg-blue-600/60 px-1.5 py-0.5 rounded">AI</span>
+            </div>
+            <p className="text-blue-300 text-[10px] mt-0.5">Mumbai Local · Powered by RailFlow</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-blue-200 text-[10px]">{user?.name}</span>
+            <button onClick={handleLogout}
+              className="text-[10px] bg-blue-600/60 hover:bg-blue-600 text-blue-200 px-2.5 py-1 rounded-lg transition-colors font-medium">
+              Logout
+            </button>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="font-semibold text-sm mb-3">Filters</div>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50"
-              >
-                <option value="">All</option>
-                <option value="filed">Filed</option>
-                <option value="acknowledged">Acknowledged</option>
-                <option value="resolved">Resolved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Incident Type</label>
-              <select
-                value={typeFilter}
-                onChange={e => setTypeFilter(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50"
-              >
-                <option value="">All</option>
-                {Object.keys(INCIDENT_ICONS).map(t => (
-                  <option key={t} value={t}>{t.replace('_', ' ')}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+        <div className="pt-1">
+          <p className="text-white font-bold text-base">Police Dashboard</p>
+          <p className="text-blue-300 text-xs mt-0.5">Jan Suraksha Complaint Management</p>
         </div>
 
-        {/* Refresh */}
-        <button
-          onClick={fetchComplaints}
-          className="w-full bg-[#1e3a5f] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#2a4f7f]"
-        >
-          Refresh
-        </button>
+        {/* Stats row */}
+        <div className="flex gap-2 mt-3">
+          {[
+            { key: 'filed',        label: 'Filed',  bg: 'bg-red-500/80' },
+            { key: 'acknowledged', label: 'Active', bg: 'bg-amber-500/80' },
+            { key: 'resolved',     label: 'Solved', bg: 'bg-emerald-500/80' },
+            { key: 'rejected',     label: 'Closed', bg: 'bg-gray-400/80' },
+          ].map(s => (
+            <div key={s.key} className={`flex-1 ${s.bg} rounded-lg px-2 py-2 text-center`}>
+              <div className="text-white text-lg font-black">{stats[s.key]}</div>
+              <div className="text-white/80 text-[9px] font-semibold">{s.label}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Right: Ticket Cards */}
-      <div className="lg:col-span-3 space-y-3">
-        <div className="bg-white rounded-xl shadow-sm px-5 py-3 border-b border-gray-100">
-          <div className="font-semibold text-sm">Police Dashboard — Jan Suraksha Complaint Management</div>
-          <div className="text-[10px] text-gray-400">Complaint tickets filed by railway passengers via Jan Suraksha Bot</div>
+      {/* ── FILTERS ── */}
+      <div className="px-3 pt-3 pb-1">
+        {/* Status filter chips */}
+        <div className="flex gap-1.5 overflow-x-auto pb-2">
+          {STATUS_OPTIONS.map(s => (
+            <button key={s || 'all'} onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-colors ${
+                statusFilter === s
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-500 border border-gray-200'
+              }`}>
+              {s ? s.charAt(0).toUpperCase() + s.slice(1) : 'All'}
+            </button>
+          ))}
         </div>
+        {/* Type + Refresh row */}
+        <div className="flex gap-2 items-center">
+          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
+            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white text-gray-600">
+            <option value="">All incident types</option>
+            {Object.keys(INCIDENT_ICONS).map(t => (
+              <option key={t} value={t}>{INCIDENT_ICONS[t]} {t.replace('_', ' ')}</option>
+            ))}
+          </select>
+          <button onClick={fetchComplaints}
+            className="w-9 h-9 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors">
+            <IconRefresh />
+          </button>
+        </div>
+      </div>
 
-        {loading && <div className="text-center text-gray-400 py-8 text-sm">Loading complaints...</div>}
+      {/* ── TICKETS ── */}
+      <div className="px-3 pt-2 pb-6 space-y-2.5">
+        {loading && (
+          <div className="text-center text-gray-400 py-12 text-xs">
+            <span className="w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin inline-block mb-2" />
+            <p>Loading complaints...</p>
+          </div>
+        )}
 
         {!loading && complaints.length === 0 && (
           <div className="text-center text-gray-400 py-12 bg-white rounded-xl shadow-sm">
             <div className="text-3xl mb-2">📋</div>
-            <div className="text-sm font-medium">No complaints found</div>
-            <div className="text-xs mt-1">Complaints filed via Jan Suraksha Bot will appear here</div>
+            <p className="text-sm font-medium">No complaints found</p>
+            <p className="text-xs mt-1">Tickets from Jan Suraksha Bot appear here</p>
           </div>
         )}
 
         {complaints.map(c => (
           <div key={c.ref} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Ticket Header */}
-            <div className="px-5 py-3 flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">{INCIDENT_ICONS[c.incident_type] || '📋'}</div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-xs text-gray-500">{c.ref}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${STATUS_COLORS[c.status] || ''}`}>
+            {/* Header */}
+            <div className="px-4 py-3">
+              <div className="flex items-start gap-2.5">
+                <div className="text-xl mt-0.5">{INCIDENT_ICONS[c.incident_type] || '📋'}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${STATUS_COLORS[c.status] || ''}`}>
                       {c.status?.toUpperCase()}
                     </span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${SEVERITY_COLORS[c.severity] || ''}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${SEVERITY_COLORS[c.severity] || ''}`}>
                       {c.severity?.toUpperCase()}
                     </span>
                   </div>
-                  <div className="text-sm font-semibold text-[#1e3a5f]">
+                  <div className="text-sm font-bold text-gray-900">
                     {c.incident_type?.replace('_', ' ').toUpperCase()}
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    User: {c.user_name || 'Unknown'} | Authority: {c.authority || 'N/A'}
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    {c.user_name || 'Unknown'} · {c.authority || 'N/A'}
                   </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-[10px] text-gray-400">
-                  {c.date_filed ? new Date(c.date_filed).toLocaleDateString('en-IN', {
-                    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-                  }) : ''}
+                <div className="text-right shrink-0">
+                  <div className="font-mono text-[9px] text-gray-400">{c.ref}</div>
+                  <div className="text-[9px] text-gray-400 mt-0.5">
+                    {c.date_filed ? new Date(c.date_filed).toLocaleDateString('en-IN', {
+                      day: '2-digit', month: 'short',
+                    }) : ''}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* User Message */}
-            <div className="px-5 pb-2">
-              <div className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 italic">
+            <div className="px-4 pb-2">
+              <div className="bg-gray-50 rounded-lg px-3 py-2 text-xs text-gray-600 italic leading-relaxed">
                 "{c.user_message || 'No message'}"
               </div>
             </div>
 
-            {/* Officer Note (if exists) */}
+            {/* Officer Note */}
             {c.officer_note && (
-              <div className="px-5 pb-2">
-                <div className="bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700">
-                  Officer note: {c.officer_note}
+              <div className="px-4 pb-2">
+                <div className="bg-blue-50 rounded-lg px-3 py-2 text-[10px] text-blue-700">
+                  Officer: {c.officer_note}
                 </div>
               </div>
             )}
 
-            {/* Expandable Complaint Text + Download */}
+            {/* Complaint Text + Download */}
             {c.complaint_text && (
-              <div className="px-5 pb-2 space-y-2">
+              <div className="px-4 pb-2 space-y-1.5">
                 <details className="bg-gray-50 rounded-lg border border-gray-200">
-                  <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-100">
+                  <summary className="px-3 py-2 text-[10px] font-semibold text-gray-500 cursor-pointer">
                     View Complaint Draft
                   </summary>
-                  <div className="px-3 py-2 text-xs whitespace-pre-wrap border-t border-gray-100 bg-white max-h-60 overflow-y-auto font-mono">
+                  <div className="px-3 py-2 text-[10px] whitespace-pre-wrap border-t border-gray-100 bg-white max-h-48 overflow-y-auto font-mono leading-relaxed">
                     {c.complaint_text}
                   </div>
                 </details>
-                <button
-                  onClick={() => downloadComplaintPDF(c)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1e3a5f] text-white rounded-lg text-xs font-medium hover:bg-[#2a4f7f]"
-                >
-                  Download FIR / Complaint PDF
+                <button onClick={() => downloadComplaintPDF(c)}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-semibold hover:bg-blue-700 transition-colors">
+                  📄 Download FIR / Complaint PDF
                 </button>
               </div>
             )}
 
-            {/* Action Buttons — filed status */}
+            {/* Action Buttons — filed */}
             {c.status === 'filed' && (
-              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-2">
-                <button
-                  onClick={() => updateStatus(c.ref, 'acknowledged')}
-                  disabled={actionLoading === c.ref}
-                  className="px-4 py-1.5 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 disabled:opacity-50"
-                >
+              <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex gap-2">
+                <button onClick={() => updateStatus(c.ref, 'acknowledged')} disabled={actionLoading === c.ref}
+                  className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-[10px] font-bold hover:bg-amber-600 disabled:opacity-50">
                   Acknowledge
                 </button>
-                <button
-                  onClick={() => openModal(c.ref, 'resolved')}
-                  disabled={actionLoading === c.ref}
-                  className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 disabled:opacity-50"
-                >
+                <button onClick={() => openModal(c.ref, 'resolved')} disabled={actionLoading === c.ref}
+                  className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 disabled:opacity-50">
                   Resolve
                 </button>
-                <button
-                  onClick={() => openModal(c.ref, 'rejected')}
-                  disabled={actionLoading === c.ref}
-                  className="px-4 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 disabled:opacity-50"
-                >
+                <button onClick={() => openModal(c.ref, 'rejected')} disabled={actionLoading === c.ref}
+                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-[10px] font-bold hover:bg-red-600 disabled:opacity-50">
                   Reject
                 </button>
               </div>
             )}
 
-            {/* Action Buttons — acknowledged status */}
+            {/* Action Buttons — acknowledged */}
             {c.status === 'acknowledged' && (
-              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-2">
-                <button
-                  onClick={() => openModal(c.ref, 'resolved')}
-                  disabled={actionLoading === c.ref}
-                  className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 disabled:opacity-50"
-                >
+              <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex gap-2">
+                <button onClick={() => openModal(c.ref, 'resolved')} disabled={actionLoading === c.ref}
+                  className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 disabled:opacity-50">
                   Resolve
                 </button>
-                <button
-                  onClick={() => openModal(c.ref, 'rejected')}
-                  disabled={actionLoading === c.ref}
-                  className="px-4 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 disabled:opacity-50"
-                >
+                <button onClick={() => openModal(c.ref, 'rejected')} disabled={actionLoading === c.ref}
+                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-[10px] font-bold hover:bg-red-600 disabled:opacity-50">
                   Reject
                 </button>
               </div>
@@ -371,24 +330,21 @@ export default function PoliceDashboard() {
         ))}
       </div>
 
-      {/* Modal Overlay for Resolve/Reject Notes */}
+      {/* ── MODAL ── */}
       {modal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <div className="font-semibold text-sm text-[#1e3a5f]">
+        <div className="fixed inset-0 bg-black/50 flex items-end z-50">
+          <div className="absolute inset-0" onClick={() => setModal(null)} />
+          <div className="relative w-full max-w-sm mx-auto bg-white rounded-t-2xl shadow-2xl animate-slide-up">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <div className="font-bold text-sm text-gray-900">
                 {modal.action === 'resolved' ? 'Resolve Complaint' : 'Reject Complaint'}
               </div>
-              <div className="text-xs text-gray-400 mt-0.5">
-                Ref: {modal.ref}
-              </div>
+              <div className="text-[10px] text-gray-400 mt-0.5 font-mono">{modal.ref}</div>
             </div>
 
-            <div className="px-6 py-4">
-              <label className="block text-xs font-medium text-gray-600 mb-2">
-                {modal.action === 'resolved'
-                  ? 'Resolution note (optional)'
-                  : 'Reason for rejection (required)'}
+            <div className="px-5 py-4">
+              <label className="block text-[10px] text-gray-500 font-semibold uppercase tracking-widest mb-2">
+                {modal.action === 'resolved' ? 'Resolution note (optional)' : 'Reason for rejection (required)'}
               </label>
               <textarea
                 value={modal.note}
@@ -397,16 +353,14 @@ export default function PoliceDashboard() {
                 placeholder={modal.action === 'resolved'
                   ? 'e.g. Phone recovered from suspect at Dadar station'
                   : 'e.g. Insufficient evidence to proceed'}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#ff6b35] focus:ring-1 focus:ring-[#ff6b35] resize-none"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                 autoFocus
               />
             </div>
 
-            <div className="px-6 py-3 bg-gray-50 rounded-b-2xl flex items-center justify-end gap-2">
-              <button
-                onClick={() => setModal(null)}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium"
-              >
+            <div className="px-5 py-3 bg-gray-50 rounded-b-2xl flex gap-2">
+              <button onClick={() => setModal(null)}
+                className="flex-1 py-2.5 text-sm text-gray-600 font-medium bg-white border border-gray-200 rounded-xl">
                 Cancel
               </button>
               <button
@@ -415,18 +369,25 @@ export default function PoliceDashboard() {
                   updateStatus(modal.ref, modal.action, modal.note)
                 }}
                 disabled={modal.action === 'rejected' && !modal.note.trim()}
-                className={`px-5 py-2 rounded-xl text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-50 ${
                   modal.action === 'resolved'
-                    ? 'bg-green-600 hover:bg-green-700'
+                    ? 'bg-emerald-600 hover:bg-emerald-700'
                     : 'bg-red-500 hover:bg-red-600'
-                }`}
-              >
+                }`}>
                 {modal.action === 'resolved' ? 'Resolve' : 'Reject'}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes slide-up {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        .animate-slide-up { animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+      `}</style>
     </div>
   )
 }

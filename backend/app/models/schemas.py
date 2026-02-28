@@ -1,8 +1,9 @@
 """
-RailMind Shared Data Models.
+RailSense Data Models.
 
-These are the contracts between engines. When CrowdSignal writes data,
-PersonalGuard and DisruptionBrain read the same shape.
+Engine A: FootGuard — platform safety detection
+Engine B: TrespassMap — station risk prediction
+Engine C: Jan Suraksha Bot — complaint filing (Dhruv)
 """
 
 from pydantic import BaseModel
@@ -13,20 +14,18 @@ from enum import Enum
 
 # ── Enums ──────────────────────────────────────────────────────
 
-class SignalType(str, Enum):
-    CROWD = "crowd"
-    DELAY = "delay"
-    CANCEL = "cancel"
-    FIGHT = "fight"
-    PLATFORM_CHANGE = "platform_change"
-    SIGNAL_FAIL = "signal_fail"
+class DangerLevel(str, Enum):
+    SAFE = "safe"
+    CAUTION = "caution"
+    DANGER = "danger"
+    CRITICAL = "critical"
 
 
-class Severity(str, Enum):
+class RiskLevel(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
-    DANGER = "danger"
+    CRITICAL = "critical"
 
 
 class LineName(str, Enum):
@@ -35,79 +34,72 @@ class LineName(str, Enum):
     HARBOUR = "HR"
 
 
-# ── Engine 1: CrowdSignal ─────────────────────────────────────
+# ── Engine A: FootGuard ───────────────────────────────────────
 
-class CrowdSignal(BaseModel):
-    """Output of NLP pipeline — one structured signal from chat."""
-    train_number: Optional[str] = None
+class AnalyzeRequest(BaseModel):
+    """Image upload for FootGuard analysis."""
+    image_base64: str
     station: Optional[str] = None
-    line: Optional[LineName] = None
-    signal_type: SignalType
-    severity: Severity
-    raw_text: str
+    camera_id: Optional[str] = None
+
+
+class DetectionResult(BaseModel):
+    """What FootGuard detected in a single frame."""
+    footboard_detected: bool = False
+    persons_at_risk: int = 0
+    door_overcrowding: bool = False
+    platform_rush: bool = False
+    danger_level: DangerLevel = DangerLevel.SAFE
+    confidence: float = 0.0
+    description: str = ""
+
+
+class DetectionEvent(BaseModel):
+    """Full FootGuard analysis output — stored in Neo4j."""
+    detection: DetectionResult
+    station: Optional[str] = None
+    station_historical_risk: Optional[float] = None
+    recommended_action: str = ""
+    reasoning: str = ""
+    timestamp: datetime = None
+    source: str = "footguard"
+
+
+# ── Engine B: TrespassMap ─────────────────────────────────────
+
+class StationRisk(BaseModel):
+    """Risk score for a single station."""
+    station: str
+    line: LineName
+    risk_score: int  # 0-100
+    risk_level: RiskLevel
+    annual_deaths: int = 0
+    trespass_deaths: int = 0
+    footboard_deaths: int = 0
+    has_fob: bool = True  # foot overbridge
+    platform_count: int = 2
+    risk_factors: list[str] = []
+    rpf_recommendation: str = ""
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+
+
+class RiskMapResponse(BaseModel):
+    """Full risk map — all stations."""
+    stations: list[StationRisk]
+    high_risk_count: int
     timestamp: datetime
-    source: str = "mindicator_chat"
+    weather_factor: Optional[str] = None
 
 
-# ── Engine 2: PersonalGuard ────────────────────────────────────
-
-class UserProfile(BaseModel):
-    """A commuter's learned routine."""
-    user_id: str
-    name: str
-    origin: str
-    destination: str
-    line: LineName
-    usual_train: str
-    usual_departure: str  # "08:05"
-    flexibility_score: float  # 0.0 (rigid) to 1.0 (flexible)
-
-
-class AlertMessage(BaseModel):
-    """Push notification content sent to user's phone."""
-    user_id: str
-    title: str
-    body: str
-    best_option: Optional[str] = None
-    alternative: Optional[str] = None
-    crowd_score: int  # 0-100
-    reasons: list[str]
-
-
-# ── Engine 3: DisruptionBrain ──────────────────────────────────
-
-class DisruptionEvent(BaseModel):
-    """A detected disruption — cancellation, signal failure, etc."""
-    train_number: str
-    line: LineName
-    disruption_type: str  # cancel / delay / megablock / signal_fail
-    station: Optional[str] = None
-    detected_at: datetime
-
-
-class CascadeRisk(BaseModel):
-    """Predicted overflow on downstream trains after a disruption."""
-    source_train: str
-    affected_train: str
-    predicted_surge_percent: float  # e.g. 140 means 140% capacity
-    confidence: float  # 0-1
-
-
-class RerouteCard(BaseModel):
-    """Full reroute recommendation pushed to affected users."""
-    user_id: str
-    disrupted_train: str
-    options: list[dict]  # [{train, platform, crowd_score, time_diff, notes}]
-    multimodal_option: Optional[str] = None  # bus/metro fallback
-
-
-# ── Engine 4: Jan Suraksha Bot ─────────────────────────────────
+# ── Engine C: Jan Suraksha Bot (Dhruv) ────────────────────────
 
 class ChatRequest(BaseModel):
     """Incoming message to Jan Suraksha Bot."""
     user_id: str
     message: str
     language: str = "en"  # en / hi / mr
+    context: Optional[dict] = None  # auto-filled by FootGuard trigger
 
 
 class ActionOption(BaseModel):

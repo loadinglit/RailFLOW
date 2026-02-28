@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>RailMind — Data Flow</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fafafa; margin: 0; padding: 40px; }
+  h1 { text-align: center; font-size: 28px; margin-bottom: 30px; }
+  .diagram { max-width: 1100px; margin: 0 auto; }
+  .row { display: flex; gap: 16px; margin-bottom: 10px; }
+  .col { flex: 1; }
+  .zone { border-radius: 12px; padding: 16px; min-height: 520px; }
+  .zone-src { background: #dbe4ff40; border: 1px solid #4a9eed; }
+  .zone-ai { background: #e5dbff40; border: 1px solid #8b5cf6; }
+  .zone-db { background: #d3f9d840; border: 1px solid #22c55e; }
+  .zone-out { background: #b2f2bb30; border: 1px solid #22c55e; }
+  .zone-title { font-weight: 700; font-size: 14px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .zone-src .zone-title { color: #2563eb; }
+  .zone-ai .zone-title { color: #6d28d9; }
+  .zone-db .zone-title { color: #15803d; }
+  .zone-out .zone-title { color: #15803d; }
+  .box { border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; line-height: 1.4; }
+  .box-blue { background: #a5d8ff; border: 1px solid #4a9eed; }
+  .box-orange { background: #ffd8a8; border: 1px solid #f59e0b; }
+  .box-yellow { background: #fff3bf; border: 1px solid #f59e0b; }
+  .box-purple { background: #d0bfff; border: 1px solid #8b5cf6; }
+  .box-pink { background: #eebefa; border: 1px solid #ec4899; }
+  .box-green { background: #c3fae8; border: 2px solid #22c55e; }
+  .box-green-light { background: #b2f2bb; border: 1px solid #22c55e; }
+  .box-red { background: #ffc9c9; border: 1px solid #ef4444; }
+  .box b { display: block; font-size: 14px; }
+  .box small { color: #555; }
+  .arrow { text-align: center; color: #8b5cf6; font-size: 20px; padding: 4px 0; }
+  .arrow-right { display: flex; align-items: center; justify-content: center; font-size: 24px; color: #8b5cf6; padding: 0 8px; }
+  .connections { max-width: 1100px; margin: 30px auto 0; }
+  .conn-title { font-weight: 700; font-size: 16px; margin-bottom: 12px; }
+  .conn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .conn-box { border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.5; }
+  .conn-writes { background: #e5dbff; border-left: 4px solid #8b5cf6; }
+  .conn-reads { background: #d3f9d8; border-left: 4px solid #22c55e; }
+  .conn-feedback { background: #ffc9c9; border-left: 4px solid #ef4444; }
+  .legend { max-width: 1100px; margin: 20px auto; display: flex; gap: 20px; font-size: 13px; color: #666; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>RailMind — Complete Data Flow</h1>
+
+<div class="diagram">
+<div class="row">
+
+<!-- DATA SOURCES -->
+<div class="col" style="flex: 0.9">
+<div class="zone zone-src">
+  <div class="zone-title">Data Sources</div>
+  <div class="box box-blue"><b>mIndicator Chat</b><small>Live scrape every 60s — WR/CR/HR chatrooms</small></div>
+  <div class="box box-blue"><b>Kaggle Timetable</b><small>Trains, stations, lines, stop times</small></div>
+  <div class="box box-blue"><b>OpenWeatherMap</b><small>Rain intensity, temperature (free API)</small></div>
+  <div class="box box-blue"><b>Holidays / IPL</b><small>Public calendars, school schedule</small></div>
+  <div class="box box-orange"><b>Railways Act PDFs</b><small>India Kanoon — Sec 124, 124A, 147</small></div>
+  <div class="box box-orange"><b>CPGRAMS / RPF / GRP</b><small>Filing guide, jurisdiction docs</small></div>
+  <div class="box box-yellow"><b>Demo Users (4)</b><small>Rahul, Priya, Meena, Arjun</small></div>
+</div>
+</div>
+
+<!-- AI ENGINES -->
+<div class="col" style="flex: 1.2">
+<div class="zone zone-ai">
+  <div class="zone-title">AI Engines</div>
+  <div class="box box-purple">
+    <b>Engine 1: CrowdSignal</b>
+    <small>spaCy NER + GPT-4o-mini validation<br>
+    Chat text → extracts train/station/severity → writes :CrowdSignal to Neo4j</small>
+  </div>
+  <div class="box box-purple">
+    <b>Engine 2: PersonalGuard</b>
+    <small>LightGBM crowd model + rule multipliers<br>
+    Reads user profile + crowd scores → fires push notification 15min before departure</small>
+  </div>
+  <div class="box box-purple">
+    <b>Engine 3: DisruptionBrain</b>
+    <small>Cascade prediction + reroute generation<br>
+    Train cancels → next 3 trains surge calc → reroute card pushed to affected users</small>
+  </div>
+  <div class="box box-pink">
+    <b>Engine 4: Jan Suraksha Bot (Dhruv)</b>
+    <small>LangGraph agent + RAG on Milvus + Neo4j context<br>
+    7 agentic tools: identify_authority, draft_complaint, calculate_compensation...</small>
+  </div>
+</div>
+</div>
+
+<!-- DATABASES -->
+<div class="col" style="flex: 0.7">
+<div class="zone zone-db">
+  <div class="zone-title">Databases</div>
+  <div class="box box-green" style="padding: 16px; margin-bottom: 16px;">
+    <b style="font-size: 16px;">Neo4j</b>
+    <small>Knowledge Graph<br><br>
+    :User → :Route → :Train → :Station<br>
+    :Train → :TimeSlot → :CrowdSignal<br>
+    :DisruptionEvent → :CascadeRisk<br>
+    :User → :Complaint<br>
+    :ExternalFactor → :CrowdSignal<br><br>
+    <b>ALL 4 engines</b> read/write here</small>
+  </div>
+  <div class="box box-orange" style="padding: 16px;">
+    <b style="font-size: 16px;">Milvus</b>
+    <small>Vector Store<br><br>
+    Railways Act embeddings<br>
+    CPGRAMS procedure chunks<br>
+    RPF/GRP jurisdiction guide<br><br>
+    <b>Engine 4 only</b> queries here</small>
+  </div>
+</div>
+</div>
+
+<!-- OUTPUTS -->
+<div class="col" style="flex: 0.8">
+<div class="zone zone-out">
+  <div class="zone-title">Outputs</div>
+  <div class="box box-green-light"><b>CrowdSignal Nodes</b><small>Structured signals in Neo4j graph</small></div>
+  <div class="box box-green-light"><b>Push Notification</b><small>Phone alert via Firebase FCM<br>"8:05 Virar Fast — DANGER CROWD"</small></div>
+  <div class="box box-red"><b>Reroute Card</b><small>Phone push with alternate trains<br>"Take 8:12 Borivali Fast instead"</small></div>
+  <div class="box box-pink"><b>Complaint Letter</b><small>Formal legal complaint + CPGRAMS ref</small></div>
+  <div class="box box-pink"><b>Compensation Calc</b><small>"Section 124A — eligible for ₹8 lakh"</small></div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- CONNECTIONS -->
+<div class="connections">
+<div class="conn-title">How Engines Connect</div>
+<div class="conn-grid">
+  <div class="conn-box conn-writes">
+    <b>Engine 1 WRITES →</b> :CrowdSignal nodes to Neo4j (every 60s from live chat)
+  </div>
+  <div class="conn-box conn-reads">
+    <b>Engine 2 READS ←</b> :CrowdSignal + :ExternalFactor + :User from Neo4j → generates alert
+  </div>
+  <div class="conn-box conn-reads">
+    <b>Engine 3 READS ←</b> :CrowdSignal (detects "cancel") + :Train (next 3 trains) → cascade math → reroute
+  </div>
+  <div class="conn-box conn-reads">
+    <b>Engine 4 READS ←</b> :User context from Neo4j (skips cold-start) + legal docs from Milvus → agent decides tools
+  </div>
+  <div class="conn-box conn-feedback">
+    <b>Feedback:</b> E4 complaints → enrich E1 safety heatmap. E1 signals → feed E2 + E3 predictions.
+  </div>
+  <div class="conn-box conn-feedback">
+    <b>Feedback:</b> E3 disruption events → stored as historical nodes → improve future cascade predictions.
+  </div>
+</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#a5d8ff"></div> Bhoomi's data sources</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffd8a8"></div> Dhruv's data sources</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d0bfff"></div> Bhoomi's engines (1,2,3)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#eebefa"></div> Dhruv's engine (4)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c3fae8"></div> Neo4j (shared)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffc9c9"></div> Feedback loop</div>
+</div>
+
+</body>
+</html>

@@ -46,3 +46,4 @@ neo4j/logs/
 
 # Milvus
 milvus_data/
+backend/logs/
