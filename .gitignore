@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+env/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/build/
+
+# Data files (large)
+backend/data/*.csv
+backend/data/*.zip
+backend/data/*.json
+!backend/data/sample_*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Neo4j
+neo4j/data/
+neo4j/logs/
+
+# Milvus
+milvus_data/
