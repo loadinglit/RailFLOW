@@ -2,7 +2,8 @@
 RailFlow — Neo4j Seed Script
 Generates a comprehensive Mumbai local train timetable + 5000 crowd reports.
 
-Timetable: ~300 trains across WR/CR/HR, 4am to midnight, realistic frequency.
+Timetable: ~500 trains across WR/CR/HR, 4am to midnight, realistic frequency.
+Uses static deterministic timetable from mumbai_timetable.py (real durations/types).
 Reports: 5000 over 3 months (Dec 2025 → Feb 2026) with peak-hour weighting.
 
 Run: cd RailFLOW && uv run python backend/scripts/seed_crowd_data.py
@@ -16,7 +17,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+# Add project root so data package is importable
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 from app.core import run_cypher, get_neo4j_driver
+from backend.data.mumbai_timetable import generate_timetable
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -81,172 +86,11 @@ STATIONS = [
 
 
 # ══════════════════════════════════════════════════════════════════════
-# TIMETABLE GENERATOR
+# TIMETABLE — imported from static data module
 # ══════════════════════════════════════════════════════════════════════
-# Generates realistic Mumbai local train schedule.
-# Peak hours: train every 3-5 min. Off-peak: 8-15 min. Late night: 20-30 min.
-
-def _time_str(h, m):
-    """Format hour/minute as HH:MM, wrapping properly."""
-    h = h % 24
-    m = max(0, min(59, m))
-    return f"{h:02d}:{m:02d}"
-
-
-def _gen_line_timetable(line, routes, base_num):
-    """
-    Generate timetable for one railway line.
-    routes: list of (origin, dest, type, direction) tuples
-    Returns list of train dicts.
-    """
-    trains = []
-    num_counter = base_num
-
-    # Time blocks with frequency (minutes between trains)
-    # format: (start_hour, end_hour, freq_minutes, direction_weight)
-    # direction_weight: "south" = more southbound, "north" = more northbound, "equal" = balanced
-    blocks = [
-        (4,  6,  15, "south"),   # early morning — mostly southbound
-        (6,  7,  7,  "south"),   # pre-peak
-        (7,  10, 4,  "south"),   # MORNING PEAK — heavy southbound
-        (10, 12, 8,  "equal"),   # late morning
-        (12, 16, 12, "equal"),   # afternoon
-        (16, 17, 7,  "north"),   # pre-evening peak
-        (17, 20, 4,  "north"),   # EVENING PEAK — heavy northbound
-        (20, 22, 10, "north"),   # post-peak
-        (22, 24, 20, "equal"),   # late night
-    ]
-
-    for start_h, end_h, freq, direction_bias in blocks:
-        current_min = start_h * 60  # start of block in minutes
-        end_min = end_h * 60
-
-        while current_min < end_min:
-            h = current_min // 60
-            m = current_min % 60
-
-            # Pick a route based on direction bias
-            # "south" = toward terminus (Churchgate/CST)
-            # "north" = away from terminus
-            south_routes = [r for r in routes if r[3] == "south"]
-            north_routes = [r for r in routes if r[3] == "north"]
-
-            if direction_bias == "south":
-                # 70% south, 30% north during morning peak
-                pool = south_routes * 7 + north_routes * 3
-            elif direction_bias == "north":
-                # 30% south, 70% north during evening peak
-                pool = south_routes * 3 + north_routes * 7
-            else:
-                pool = south_routes + north_routes
-
-            if not pool:
-                current_min += freq
-                continue
-
-            route = random.choice(pool)
-            origin, dest, train_type, direction = route
-
-            # Train name = destination name + type
-            if train_type == "FAST":
-                name = f"{origin if direction == 'north' else dest} Fast"
-                # Actually, name is typically the farther station
-                if direction == "south":
-                    name = f"{origin} Fast"
-                else:
-                    name = f"{dest} Fast"
-            else:
-                if direction == "south":
-                    name = f"{origin} Slow"
-                else:
-                    name = f"{dest} Slow"
-
-            # Slight randomness in departure time (±0-2 min)
-            jitter = random.randint(0, 2)
-            depart = _time_str(h, m + jitter)
-
-            trains.append({
-                "number": str(num_counter),
-                "name": name,
-                "type": train_type,
-                "line": line,
-                "origin": origin,
-                "dest": dest,
-                "depart": depart,
-            })
-            num_counter += 2  # odd numbers for consistency
-
-            # Add slight frequency variation
-            current_min += freq + random.randint(-1, 1)
-
-    return trains
-
-
-def generate_timetable():
-    """Generate full Mumbai local timetable — ~300 trains."""
-
-    # WR routes: (origin, destination, type, direction)
-    wr_routes = [
-        # Southbound (toward Churchgate) — morning peak
-        ("Virar",    "Churchgate", "FAST", "south"),
-        ("Virar",    "Churchgate", "FAST", "south"),  # doubled weight — most common
-        ("Borivali", "Churchgate", "FAST", "south"),
-        ("Borivali", "Churchgate", "SLOW", "south"),
-        ("Andheri",  "Churchgate", "SLOW", "south"),
-        ("Bandra",   "Churchgate", "SLOW", "south"),
-        # Northbound (from Churchgate) — evening peak
-        ("Churchgate", "Virar",    "FAST", "north"),
-        ("Churchgate", "Virar",    "FAST", "north"),
-        ("Churchgate", "Borivali", "FAST", "north"),
-        ("Churchgate", "Borivali", "SLOW", "north"),
-        ("Churchgate", "Andheri",  "SLOW", "north"),
-    ]
-
-    # CR routes
-    cr_routes = [
-        ("Kasara",   "CST",   "FAST", "south"),
-        ("Kalyan",   "CST",   "FAST", "south"),
-        ("Kalyan",   "CST",   "FAST", "south"),
-        ("Kalyan",   "CST",   "SLOW", "south"),
-        ("Dombivli", "CST",   "FAST", "south"),
-        ("Thane",    "CST",   "FAST", "south"),
-        ("Thane",    "CST",   "SLOW", "south"),
-        ("Kurla",    "CST",   "SLOW", "south"),
-        # Northbound
-        ("CST", "Kasara",   "FAST", "north"),
-        ("CST", "Kalyan",   "FAST", "north"),
-        ("CST", "Kalyan",   "FAST", "north"),
-        ("CST", "Dombivli", "FAST", "north"),
-        ("CST", "Thane",    "FAST", "north"),
-        ("CST", "Thane",    "SLOW", "north"),
-    ]
-
-    # HR routes
-    hr_routes = [
-        ("Panvel",  "CST",    "FAST", "south"),
-        ("Vashi",   "CST",    "SLOW", "south"),
-        ("Belapur", "CST",    "FAST", "south"),
-        ("CST",     "Panvel", "FAST", "north"),
-        ("CST",     "Vashi",  "SLOW", "north"),
-        ("CST",     "Panvel", "SLOW", "north"),
-    ]
-
-    wr = _gen_line_timetable("WR", wr_routes, 90001)
-    cr = _gen_line_timetable("CR", cr_routes, 11001)
-    hr = _gen_line_timetable("HR", hr_routes, 21001)
-
-    all_trains = wr + cr + hr
-
-    # Sort by line then departure time
-    all_trains.sort(key=lambda t: (t["line"], t["depart"]))
-
-    # Re-number sequentially per line for clean numbering
-    counters = {"WR": 90001, "CR": 11001, "HR": 21001}
-    for t in all_trains:
-        t["number"] = str(counters[t["line"]])
-        counters[t["line"]] += 2
-
-    return all_trains
+# generate_timetable is imported from backend.data.mumbai_timetable above.
+# It produces ~500 deterministic trains with real durations, arrive times,
+# and train types (FAST, SLOW, SEMI FAST, AC LOCAL).
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -269,7 +113,13 @@ def get_crowd_distribution(train, day_type, hour):
     line = train["line"]
     h = int(hour.split(":")[0]) if isinstance(hour, str) else hour
     is_southbound = train["dest"] in ("Churchgate", "CST")
-    is_fast = train["type"] == "FAST"
+    is_fast = train["type"] in ("FAST", "SEMI_FAST")
+
+    # AC LOCAL trains are always less crowded (premium fare)
+    if train["type"] == "AC":
+        if day_type == "weekday" and (7 <= h <= 9 or 17 <= h <= 19):
+            return {"RED": 5, "YELLOW": 30, "GREEN": 65}
+        return {"RED": 2, "YELLOW": 15, "GREEN": 83}
 
     # ── Western Railway ──
     if line == "WR":
@@ -501,63 +351,84 @@ def ingest_all():
     print("\nClearing old data...")
     run_cypher("MATCH (n) DETACH DELETE n")
 
-    print(f"Creating {len(STATIONS)} Station nodes...")
-    for s in STATIONS:
-        run_cypher("""
-            MERGE (st:Station {name: $name})
-            SET st.line = $line, st.zone = $zone
-        """, {"name": s["name"], "line": s["line"], "zone": s["zone"]})
+    # ── Batch: Stations ──
+    print(f"Creating {len(STATIONS)} Station nodes (batch)...")
+    run_cypher("""
+        UNWIND $stations AS s
+        MERGE (st:Station {name: s.name})
+        SET st.line = s.line, st.zone = s.zone
+    """, {"stations": STATIONS})
 
-    print(f"Creating {len(all_trains)} Train nodes...")
-    for t in all_trains:
-        run_cypher("""
-            MERGE (tr:Train {number: $number})
-            SET tr.name = $name, tr.type = $type, tr.line = $line,
-                tr.origin = $origin, tr.destination = $dest, tr.depart = $depart
-        """, {
-            "number": t["number"], "name": t["name"], "type": t["type"],
-            "line": t["line"], "origin": t["origin"], "dest": t["dest"],
-            "depart": t["depart"],
-        })
+    # ── Batch: Trains (in chunks of 200) ──
+    print(f"Creating {len(all_trains)} Train nodes (batch)...")
+    train_rows = [{
+        "number": t["number"], "name": t["name"], "type": t["type"],
+        "train_type": t.get("train_type", ""),
+        "line": t["line"], "origin": t["origin"], "dest": t["dest"],
+        "depart": t["depart"], "arrive": t.get("arrive", ""),
+        "duration": t.get("duration", ""),
+    } for t in all_trains]
 
-    # Link trains to origin/destination stations
-    for t in all_trains:
+    for i in range(0, len(train_rows), 200):
+        chunk = train_rows[i:i+200]
         run_cypher("""
-            MATCH (tr:Train {number: $number})
-            MATCH (orig:Station {name: $origin})
-            MATCH (dest:Station {name: $dest})
+            UNWIND $trains AS t
+            MERGE (tr:Train {number: t.number})
+            SET tr.name = t.name, tr.type = t.type, tr.train_type = t.train_type,
+                tr.line = t.line, tr.origin = t.origin, tr.destination = t.dest,
+                tr.depart = t.depart, tr.arrive = t.arrive, tr.duration = t.duration
+        """, {"trains": chunk})
+        print(f"  ... trains {i+1}-{min(i+200, len(train_rows))}")
+
+    # ── Batch: Train → Station links ──
+    print("Linking trains to stations (batch)...")
+    link_rows = [{"number": t["number"], "origin": t["origin"], "dest": t["dest"]}
+                 for t in all_trains]
+    for i in range(0, len(link_rows), 200):
+        chunk = link_rows[i:i+200]
+        run_cypher("""
+            UNWIND $links AS l
+            MATCH (tr:Train {number: l.number})
+            MATCH (orig:Station {name: l.origin})
+            MATCH (dest:Station {name: l.dest})
             MERGE (tr)-[:DEPARTS_FROM]->(orig)
             MERGE (tr)-[:ARRIVES_AT]->(dest)
-        """, {"number": t["number"], "origin": t["origin"], "dest": t["dest"]})
+        """, {"links": chunk})
 
-    print(f"Inserting {len(reports)} CrowdReport nodes...")
-    for idx, r in enumerate(reports):
+    # ── Batch: CrowdReports (in chunks of 500) ──
+    print(f"Inserting {len(reports)} CrowdReport nodes (batch)...")
+    for i in range(0, len(reports), 500):
+        chunk = reports[i:i+500]
         run_cypher("""
+            UNWIND $reports AS r
             CREATE (cr:CrowdReport {
-                report_id:     $report_id,
-                train_number:  $train_number,
-                train_name:    $train_name,
-                train_type:    $train_type,
-                line:          $line,
-                origin:        $origin,
-                destination:   $destination,
-                timestamp:     $timestamp,
-                day_type:      $day_type,
-                hour_bucket:   $hour_bucket,
-                crowd_level:   $crowd_level,
-                user_hash:     $user_hash
+                report_id:     r.report_id,
+                train_number:  r.train_number,
+                train_name:    r.train_name,
+                train_type:    r.train_type,
+                line:          r.line,
+                origin:        r.origin,
+                destination:   r.destination,
+                timestamp:     r.timestamp,
+                day_type:      r.day_type,
+                hour_bucket:   r.hour_bucket,
+                crowd_level:   r.crowd_level,
+                user_hash:     r.user_hash
             })
-        """, r)
+        """, {"reports": chunk})
+        print(f"  ... reports {i+1}-{min(i+500, len(reports))}")
 
+    # ── Batch: CrowdReport → Train links ──
+    print("Linking reports to trains (batch)...")
+    for i in range(0, len(reports), 500):
+        chunk = [{"train_number": r["train_number"], "report_id": r["report_id"]}
+                 for r in reports[i:i+500]]
         run_cypher("""
-            MATCH (tr:Train {number: $train_number})
-            MATCH (cr:CrowdReport {report_id: $report_id})
+            UNWIND $links AS l
+            MATCH (tr:Train {number: l.train_number})
+            MATCH (cr:CrowdReport {report_id: l.report_id})
             MERGE (cr)-[:REPORTS_ON]->(tr)
-        """, {"train_number": r["train_number"], "report_id": r["report_id"]})
-
-        done = idx + 1
-        if done % 1000 == 0 or done == len(reports):
-            print(f"  ... {done}/{len(reports)}")
+        """, {"links": chunk})
 
     print("Creating indexes...")
     run_cypher("CREATE INDEX crowd_train IF NOT EXISTS FOR (c:CrowdReport) ON (c.train_number)")

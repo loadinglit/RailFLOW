@@ -248,7 +248,10 @@ async def get_weather_score(city: str = "Mumbai") -> dict:
 
 def compute_final_badge(hist_score: int, trend_score: int, weather_score: int) -> dict:
     """Combines three signals into final badge."""
-    final = (hist_score * 0.50) + (trend_score * 0.30) + (weather_score * 0.20)
+    if weather_score > 0:
+        final = (hist_score * 0.50) + (trend_score * 0.30) + (weather_score * 0.20)
+    else:
+        final = (hist_score * 0.60) + (trend_score * 0.40)
     final = round(final)
 
     if final >= 70:
@@ -257,6 +260,63 @@ def compute_final_badge(hist_score: int, trend_score: int, weather_score: int) -
         return {"badge": "YELLOW", "label": "Caution", "color": "#F59E0B", "score": final}
     else:
         return {"badge": "GREEN", "label": "Safe", "color": "#22C55E", "score": final}
+
+
+# ── Recent Report Consensus ─────────────────────────────────────
+
+MIN_REPORTS_TO_SHIFT = 2  # badge only changes if 2+ users agree
+
+def get_recent_report_counts(train_number: str, hour_bucket: str) -> dict:
+    """
+    Count crowd reports in the last 1 hour for this train.
+    Returns {"RED": n, "YELLOW": n, "GREEN": n, "total": n}.
+    """
+    cutoff = (datetime.now() - timedelta(hours=1)).isoformat()
+
+    results = run_cypher("""
+        MATCH (cr:CrowdReport {
+            train_number: $train_number,
+            hour_bucket: $hour_bucket
+        })
+        WHERE cr.timestamp >= $cutoff
+        RETURN
+            count(cr) as total,
+            sum(CASE WHEN cr.crowd_level = 'RED'    THEN 1 ELSE 0 END) as red,
+            sum(CASE WHEN cr.crowd_level = 'YELLOW' THEN 1 ELSE 0 END) as yellow,
+            sum(CASE WHEN cr.crowd_level = 'GREEN'  THEN 1 ELSE 0 END) as green
+    """, {"train_number": train_number, "hour_bucket": hour_bucket, "cutoff": cutoff})
+
+    row = results[0] if results else None
+    if not row:
+        return {"RED": 0, "YELLOW": 0, "GREEN": 0, "total": 0}
+    return {
+        "RED": row["red"], "YELLOW": row["yellow"], "GREEN": row["green"],
+        "total": row["total"],
+    }
+
+
+def apply_badge_threshold(baseline_badge: dict, live_badge: dict,
+                          recent_counts: dict) -> dict:
+    """
+    Only allow the badge to change from baseline if 2+ recent reports
+    agree on the direction. Prevents one user from flipping a badge.
+
+    Checks the DOMINANT reported level (what users actually tapped),
+    not the computed badge level.
+    """
+    if baseline_badge["badge"] == live_badge["badge"]:
+        return live_badge  # no change — no threshold needed
+
+    # Find what level users are actually reporting most
+    dominant = max(["RED", "YELLOW", "GREEN"],
+                   key=lambda l: recent_counts.get(l, 0))
+    dominant_count = recent_counts.get(dominant, 0)
+
+    if dominant_count >= MIN_REPORTS_TO_SHIFT:
+        return live_badge  # 2+ users agree — allow the change
+
+    # Not enough consensus — keep the baseline badge
+    return baseline_badge
 
 
 # ── Reason Generation ────────────────────────────────────────────
@@ -345,77 +405,73 @@ def _station_index(name: str, stations: list) -> int:
     return stations.index(t) if t in stations else -1
 
 
-def get_trains_for_route(origin: str, destination: str, dt: datetime) -> list:
+async def get_trains_for_route(origin: str, destination: str, dt: datetime) -> list:
     """
-    Queries Neo4j for trains on this route.
-    Filters by line, direction, and departure time (±15 min window).
-    Returns up to 10 trains.
+    Returns up to 10 trains for the route, filtered by time window.
+    Priority: erail.in API (real-time) → static timetable (real data, per-station stops).
     """
-    origin_title = origin.strip().title()
-    dest_title = destination.strip().title()
+    from app.services.erail import fetch_trains_from_erail
 
-    # Determine line + station order list
-    if origin_title in _WR_STATIONS or dest_title in _WR_STATIONS:
-        line, stations = "WR", _WR_STATIONS
-    elif origin_title in _CR_STATIONS or dest_title in _CR_STATIONS:
-        line, stations = "CR", _CR_STATIONS
-    elif origin_title in _HR_STATIONS or dest_title in _HR_STATIONS:
-        line, stations = "HR", _HR_STATIONS
-    else:
-        line, stations = "WR", _WR_STATIONS
+    # ── Try erail.in API first (when API key is available) ────────
+    erail_trains = await fetch_trains_from_erail(origin, destination)
+    if erail_trains:
+        return _filter_by_time(erail_trains, dt, limit=10)
 
-    orig_idx = _station_index(origin_title, stations)
-    dest_idx = _station_index(dest_title, stations)
+    # ── Static timetable with per-station departure times ─────────
+    return _get_trains_from_timetable(origin, destination, dt)
 
-    # Direction: toward terminus (higher index) = "DOWN", away = "UP"
-    going_down = orig_idx < dest_idx  # e.g. Virar(0) → Churchgate(26) = DOWN
 
-    # Time window: show trains departing from 15 min before search time
-    h, m = dt.hour, dt.minute
-    buffer_m = max(0, m - 15)
-    buffer_h = h if m >= 15 else max(0, h - 1)
-    search_from = f"{buffer_h:02d}:{buffer_m:02d}"
+def _filter_by_time(trains: list, dt: datetime, limit: int = 10) -> list:
+    """Filter erail trains to the forward time window: 5 min before → 3 hours after."""
+    from_dt = dt - timedelta(minutes=5)
+    until_dt = dt + timedelta(hours=3)
+    search_from = f"{from_dt.hour:02d}:{from_dt.minute:02d}"
+    search_until = f"{until_dt.hour:02d}:{until_dt.minute:02d}"
+    wraps_midnight = until_dt.day != dt.day
 
-    # Cap: show trains within a 3-hour window
-    end_h = min(23, h + 3)
-    search_until = f"{end_h:02d}:{dt.minute:02d}"
-
-    # Fetch trains on this line departing in the time window
-    all_trains = run_cypher("""
-        MATCH (tr:Train {line: $line})
-        WHERE tr.depart >= $search_from AND tr.depart <= $search_until
-        RETURN tr.number AS number, tr.name AS name, tr.type AS type,
-               tr.line AS line, tr.origin AS origin, tr.destination AS destination,
-               tr.depart AS depart
-        ORDER BY tr.depart
-    """, {"line": line, "search_from": search_from, "search_until": search_until})
-
-    # Filter by direction: train must go in same direction AND cover the route
     filtered = []
-    for train in all_trains:
-        t_orig_idx = _station_index(train.get("origin", ""), stations)
-        t_dest_idx = _station_index(train.get("destination", ""), stations)
-        if t_orig_idx == -1 or t_dest_idx == -1:
+    for t in trains:
+        dep = t.get("depart", "")
+        if not dep:
             continue
-
-        train_going_down = t_orig_idx < t_dest_idx
-        if train_going_down != going_down:
-            continue  # wrong direction
-
-        # Check train covers the searched segment
-        if going_down:
-            # Train origin must be at or before user's origin, dest at or after user's dest
-            if t_orig_idx <= orig_idx and t_dest_idx >= dest_idx:
-                filtered.append(train)
+        if wraps_midnight:
+            if dep >= search_from or dep <= search_until:
+                filtered.append(t)
         else:
-            # Going UP (toward outskirts): higher idx → lower idx
-            if t_orig_idx >= orig_idx and t_dest_idx <= dest_idx:
-                filtered.append(train)
-
-        if len(filtered) >= 10:
+            if search_from <= dep <= search_until:
+                filtered.append(t)
+        if len(filtered) >= limit:
             break
 
+    if wraps_midnight:
+        filtered.sort(key=lambda x: (0 if x.get("depart", "") >= search_from else 1, x.get("depart", "")))
+    else:
+        filtered.sort(key=lambda x: x.get("depart", ""))
+
     return filtered
+
+
+def _get_trains_from_timetable(origin: str, destination: str, dt: datetime) -> list:
+    """
+    Search static timetable with per-station departure times.
+    Returns trains with depart/arrive times specific to the user's stations.
+    """
+    from data.mumbai_timetable import search_trains
+
+    from_dt = dt - timedelta(minutes=5)
+    until_dt = dt + timedelta(hours=3)
+    search_from = f"{from_dt.hour:02d}:{from_dt.minute:02d}"
+    search_until = f"{until_dt.hour:02d}:{until_dt.minute:02d}"
+    wraps_midnight = until_dt.day != dt.day
+
+    return search_trains(
+        origin=origin,
+        destination=destination,
+        from_time=search_from,
+        until_time=search_until,
+        wraps_midnight=wraps_midnight,
+        limit=10,
+    )
 
 
 def get_total_reports_for_route(origin: str, destination: str) -> int:

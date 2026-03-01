@@ -23,6 +23,8 @@ from app.engines.crowd_engine import (
     get_trains_for_route,
     get_total_reports_for_route,
     store_crowd_report,
+    get_recent_report_counts,
+    apply_badge_threshold,
 )
 
 router = APIRouter()
@@ -61,8 +63,8 @@ async def search_trains(req: SearchRequest):
 
     day_type = get_day_type(dt)
 
-    # Fetch trains from Neo4j
-    trains = get_trains_for_route(req.origin, req.destination, dt)
+    # Fetch trains (erail.in API first, Neo4j fallback)
+    trains = await get_trains_for_route(req.origin, req.destination, dt)
     if not trains:
         return {"trains": [], "message": "No trains found for this route"}
 
@@ -73,9 +75,13 @@ async def search_trains(req: SearchRequest):
     for train in trains:
         train_num = train.get("number", "")
 
-        # Use the TRAIN's departure hour for crowd lookup (not the search time)
-        train_depart = train.get("depart", "08:00")
-        depart_hour = int(train_depart.split(":")[0])
+        # Use the train's ORIGIN departure for crowd lookup (matches seed data)
+        # When searching Borivali→Virar, depart=08:21 (Borivali time) but
+        # crowd reports are keyed to the origin departure (Churchgate 07:25)
+        stops = train.get("stops", {})
+        train_origin = train.get("origin", "")
+        origin_depart = stops.get(train_origin, train.get("depart", "08:00"))
+        depart_hour = int(origin_depart.split(":")[0])
         train_hour_bucket = f"{depart_hour:02d}:00-{(depart_hour+1):02d}:00"
 
         # Per-train signals
@@ -88,10 +94,13 @@ async def search_trains(req: SearchRequest):
             "train_number": train_num,
             "train_name": train.get("name"),
             "train_type": train.get("type"),
+            "erail_type": train.get("erail_type") or train.get("train_type", ""),
             "line": train.get("line"),
             "origin": train.get("origin"),
             "destination": train.get("destination"),
             "depart": train.get("depart"),
+            "arrive": train.get("arrive", ""),
+            "duration": train.get("duration", ""),
             "platform": random.randint(1, 6),
             "badge": badge["badge"],
             "badge_label": badge["label"],
@@ -126,12 +135,19 @@ async def search_trains(req: SearchRequest):
 async def submit_crowd_report(req: CrowdReportRequest):
     """
     Stores a user's crowd tap. Returns updated badge so UI can refresh live.
+    Badge only changes if 2+ recent users agree on the new level.
     """
     now = datetime.now()
     day_type = get_day_type(now)
     hour_bucket = get_hour_bucket(now)
     report_id = f"RPT_{now.strftime('%Y%m%d%H%M%S')}_{req.user_hash[:6]}"
 
+    # Snapshot baseline badge BEFORE storing the new report
+    baseline_hist = get_historical_crowd_score(req.train_number, day_type, hour_bucket)
+    baseline_trend = get_crowd_trend_score(req.train_number, day_type, hour_bucket)
+    baseline_badge = compute_final_badge(baseline_hist["score"], baseline_trend["score"], 0)
+
+    # Store the report
     store_crowd_report(
         report_id=report_id,
         train_number=req.train_number,
@@ -143,10 +159,15 @@ async def submit_crowd_report(req: CrowdReportRequest):
         user_hash=req.user_hash,
     )
 
-    # Return updated crowd stats so badge refreshes live
+    # Compute live badge (includes the new report)
     updated = get_historical_crowd_score(req.train_number, day_type, hour_bucket)
     trend = get_crowd_trend_score(req.train_number, day_type, hour_bucket)
-    badge = compute_final_badge(updated["score"], trend["score"], 0)
+    live_badge = compute_final_badge(updated["score"], trend["score"], 0)
+
+    # Threshold: badge only shifts if 2+ recent users agree
+    recent = get_recent_report_counts(req.train_number, hour_bucket)
+    badge = apply_badge_threshold(baseline_badge, live_badge, recent)
+
     total_route = get_total_reports_for_route(req.origin, req.destination)
 
     return {
@@ -155,4 +176,6 @@ async def submit_crowd_report(req: CrowdReportRequest):
         "updated_badge": badge["badge"],
         "updated_score": badge["score"],
         "updated_stats": updated,
+        "recent_reports": recent["total"],
+        "threshold_met": max(recent.get("RED", 0), recent.get("YELLOW", 0), recent.get("GREEN", 0)) >= 2,
     }

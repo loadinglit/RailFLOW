@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "WebSearch",
+      "WebFetch(domain:go4mumbai.com)",
+      "WebFetch(domain:mumbai7.com)",
+      "WebFetch(domain:www.mumbailocaltrain.com)",
+      "WebFetch(domain:erail.in)",
+      "WebFetch(domain:api.erail.in)",
+      "WebFetch(domain:www.mumbailifeline.com)",
+      "Bash(curl:*)"
     ]
   }
 }

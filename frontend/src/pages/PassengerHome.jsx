@@ -122,7 +122,7 @@ function TrainCard({ train, onTap, isRecommended }) {
             <span className={`text-[9px] text-white font-bold px-1.5 py-0.5 rounded ${lineColor}`}>
               {train.line}
             </span>
-            <span className="text-xs text-gray-400 font-medium">{train.train_type}</span>
+            <span className="text-xs text-gray-400 font-medium">{train.erail_type || train.train_type}</span>
             {train.report_count > 0 && (
               <span className="text-[9px] text-gray-400 flex items-center gap-0.5">
                 <IconInfo /> {train.report_count} reports
@@ -134,7 +134,9 @@ function TrainCard({ train, onTap, isRecommended }) {
         </div>
         <div className="text-right shrink-0">
           <div className="text-2xl font-black text-gray-900 tabular-nums">{train.depart}</div>
-          <div className="text-[10px] text-gray-400">Plt {train.platform}</div>
+          <div className="text-[10px] text-gray-400">
+            {train.duration ? `${train.duration} · ` : ""}Plt {train.platform}
+          </div>
         </div>
       </div>
       <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-gray-100">
@@ -287,7 +289,11 @@ export default function PassengerHome() {
   const [tab, setTab] = useState("trains")
   const [origin, setOrigin] = useState("")
   const [destination, setDestination] = useState("")
-  const [datetime, setDatetime] = useState(() => new Date().toISOString().slice(0, 16))
+  const [datetime, setDatetime] = useState(() => {
+    const now = new Date()
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    return local.toISOString().slice(0, 16)
+  })
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState(null)
   const [selectedTrain, setSelectedTrain] = useState(null)
@@ -332,7 +338,7 @@ export default function PassengerHome() {
         body: JSON.stringify({
           origin,
           destination,
-          datetime_str: new Date(datetime).toISOString().slice(0, 19),
+          datetime_str: datetime.length === 16 ? datetime + ":00" : datetime,
         }),
       })
       const data = await res.json()
@@ -540,7 +546,10 @@ export default function PassengerHome() {
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="text-xl font-black text-gray-900">{detailTrain.train_name}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">#{detailTrain.train_number} · {detailTrain.train_type} · {detailTrain.line}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          #{detailTrain.train_number} · {detailTrain.erail_type || detailTrain.train_type} · {detailTrain.line}
+                          {detailTrain.duration && <span className="ml-1 text-blue-600 font-medium">· {detailTrain.duration}</span>}
+                        </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-black text-gray-900">{detailTrain.depart}</div>
@@ -761,8 +770,8 @@ function getMockResults(origin, destination) {
     trains: [
       {
         train_number: "90011", train_name: "Borivali Fast", train_type: "FAST",
-        line: isWR ? "WR" : "CR", origin, destination,
-        depart: "08:12", platform: 3,
+        erail_type: "FAST", line: isWR ? "WR" : "CR", origin, destination,
+        depart: "08:12", arrive: "08:57", duration: "45m", platform: 3,
         badge: "GREEN", badge_label: "Safe", badge_color: "#22C55E", badge_score: 28,
         reason: "Usually comfortable at this hour — 31 of 37 past reports say spacious.",
         report_count: 37,
@@ -773,9 +782,9 @@ function getMockResults(origin, destination) {
         }
       },
       {
-        train_number: "90013", train_name: "Virar Fast", train_type: "FAST",
-        line: isWR ? "WR" : "CR", origin, destination,
-        depart: "08:05", platform: 1,
+        train_number: "90270", train_name: "Virar Fast", train_type: "FAST",
+        erail_type: "FAST", line: isWR ? "WR" : "CR", origin, destination,
+        depart: "08:09", arrive: "09:37", duration: "1h 28m", platform: 1,
         badge: "RED", badge_label: "Avoid", badge_color: "#EF4444", badge_score: 87,
         reason: "Monday surge + 14-min gap before this train — absorbs previous crowd.",
         report_count: 52,
@@ -786,9 +795,9 @@ function getMockResults(origin, destination) {
         }
       },
       {
-        train_number: "90015", train_name: "Virar Fast", train_type: "FAST",
-        line: isWR ? "WR" : "CR", origin, destination,
-        depart: "08:18", platform: 2,
+        train_number: "90284", train_name: "Virar Fast", train_type: "FAST",
+        erail_type: "FAST", line: isWR ? "WR" : "CR", origin, destination,
+        depart: "08:24", arrive: "09:49", duration: "1h 25m", platform: 2,
         badge: "YELLOW", badge_label: "Caution", badge_color: "#F59E0B", badge_score: 55,
         reason: "Moderate on this slot — crowd normalises slightly after 8:10.",
         report_count: 28,
