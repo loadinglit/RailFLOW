@@ -184,7 +184,7 @@ def manager_node(state: BotState) -> dict:
 
     # ── After classification: route based on actual state ──
 
-    intent = state.get("detected_action")
+    intent = state.get("detected_action") or None  # normalize empty string to None
 
     # 1. Info-only intents — don't need entity details, execute immediately
     if intent in ("check_status", "know_authority", "know_rights"):
@@ -271,7 +271,7 @@ def classify_node(state: BotState) -> dict:
         severity = result.get("severity", "medium")
         user_intent = result.get("user_intent", "none")
         new_entities = result.get("entities", {})
-        detected_action = user_intent if user_intent != "none" else None
+        detected_action = user_intent if user_intent and user_intent != "none" else None
 
         log.info("[classify] type=%s, severity=%s, intent=%s, entities=%s",
                  incident_type, severity, detected_action or "none",
@@ -564,6 +564,7 @@ def execute_node(state: BotState) -> dict:
     elif action_id == "file_cpgrams":
         cpgrams = fill_cpgrams({**state, "incident_summary": incident_summary,
                                 "compensation_amount": compensation_amount})
+        result["complaint_draft"] = cpgrams.get("filled_text")
         result["cpgrams_ref"] = cpgrams.get("tracking_ref")
         result["follow_up_date"] = cpgrams.get("follow_up_date")
         state_for_prompt = {**state,
@@ -589,11 +590,26 @@ def execute_node(state: BotState) -> dict:
     elif action_id == "check_status":
         try:
             db = get_db()
-            rows = db.execute("""
-                SELECT ref, status, incident_type, date_filed, officer_note
-                FROM complaints WHERE user_id = ?
-                ORDER BY date_filed DESC LIMIT 5
-            """, (state.get("user_id", ""),)).fetchall()
+            latest_msg = _get_latest_human_message(state)
+
+            # 1. Check if user mentioned a specific ref number (e.g. RM-20260301-CD078A)
+            import re
+            ref_match = re.search(r'RM-\d{8}-[A-F0-9]{6}', latest_msg, re.IGNORECASE)
+
+            if ref_match:
+                # User asked about a specific complaint
+                rows = db.execute("""
+                    SELECT ref, status, incident_type, date_filed, officer_note
+                    FROM complaints WHERE user_id = ? AND ref = ?
+                """, (state.get("user_id", ""), ref_match.group(0).upper())).fetchall()
+            else:
+                # No specific ref → return only the most recent complaint
+                rows = db.execute("""
+                    SELECT ref, status, incident_type, date_filed, officer_note
+                    FROM complaints WHERE user_id = ?
+                    ORDER BY date_filed DESC LIMIT 1
+                """, (state.get("user_id", ""),)).fetchall()
+
             user_complaints = [dict(r) for r in rows]
             db.close()
         except Exception as e:
