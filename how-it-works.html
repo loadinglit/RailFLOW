@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RailFlow — Architecture</title>
+<title>RailFlow — How It Works</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
@@ -22,6 +22,7 @@
     --amber: #f59e0b;
     --cyan: #06b6d4;
     --pink: #ec4899;
+    --teal: #14b8a6;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -44,8 +45,8 @@
     content: '';
     position: absolute;
     top: -120px; left: 50%; transform: translateX(-50%);
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(74,158,237,0.08) 0%, transparent 70%);
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(74,158,237,0.06) 0%, rgba(139,92,246,0.04) 40%, transparent 70%);
     pointer-events: none;
   }
   .hero-tag {
@@ -77,7 +78,7 @@
     color: var(--muted);
     font-size: 1.05rem;
     margin-top: 14px;
-    max-width: 540px;
+    max-width: 600px;
     margin-left: auto;
     margin-right: auto;
     line-height: 1.7;
@@ -89,9 +90,7 @@
     margin-top: 36px;
     flex-wrap: wrap;
   }
-  .hero-stat {
-    text-align: center;
-  }
+  .hero-stat { text-align: center; }
   .hero-stat .n {
     font-size: 2rem;
     font-weight: 900;
@@ -133,6 +132,53 @@
     max-width: 600px;
   }
 
+  /* ── HIGHLIGHT CALLOUT ── */
+  .callout {
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin: 24px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .callout::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .callout-blue { background: #0d1a2e; border: 1px solid #1e3a5f55; }
+  .callout-blue::before { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+  .callout-purple { background: #1a1030; border: 1px solid #2d1b6955; }
+  .callout-purple::before { background: linear-gradient(90deg, var(--purple), var(--pink)); }
+  .callout-green { background: #0d1f1a; border: 1px solid #1a4d2e55; }
+  .callout-green::before { background: linear-gradient(90deg, var(--green), var(--teal)); }
+  .callout-red { background: #1f0d0d; border: 1px solid #4d1a1a55; }
+  .callout-red::before { background: linear-gradient(90deg, var(--red), var(--amber)); }
+  .callout-amber { background: #1f170d; border: 1px solid #4d3d1a55; }
+  .callout-amber::before { background: linear-gradient(90deg, var(--amber), #f97316); }
+  .callout h3 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .callout p {
+    font-size: 0.85rem;
+    color: #999;
+    line-height: 1.7;
+  }
+  .callout .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
   /* ── ARCHITECTURE LAYERS ── */
   .arch-stack {
     display: flex;
@@ -157,7 +203,6 @@
     letter-spacing: 0.5px;
     text-transform: uppercase;
     flex-shrink: 0;
-    writing-mode: horizontal-tb;
     padding: 0 16px;
   }
   .arch-content {
@@ -188,6 +233,9 @@
   .layer-intel     { background: #1a1030; }
   .layer-intel .arch-label { color: var(--purple); background: #120a22; }
   .layer-intel .arch-chip { background: #1e1445; color: #d0bfff; border: 1px solid #2d1b69; }
+  .layer-safety    { background: #1f0d1f; }
+  .layer-safety .arch-label { color: var(--pink); background: #180a18; }
+  .layer-safety .arch-chip { background: #2d1445; color: #eebefa; border: 1px solid #4a1969; }
   .layer-data      { background: #0d1f1a; }
   .layer-data .arch-label { color: var(--green); background: #081510; }
   .layer-data .arch-chip { background: #10352a; color: #b2f2bb; border: 1px solid #1a4d2e; }
@@ -195,7 +243,6 @@
   .layer-ext .arch-label { color: var(--amber); background: #15100a; }
   .layer-ext .arch-chip { background: #352a10; color: #ffd8a8; border: 1px solid #4d3d1a; }
 
-  /* ── Arrow between layers ── */
   .arch-arrow {
     text-align: center;
     padding: 4px 0;
@@ -224,26 +271,15 @@
     border-radius: 12px;
     flex-shrink: 0;
   }
-  .signal-weight .pct {
-    font-size: 1.4rem;
-    font-weight: 900;
-  }
-  .signal-weight .bar {
-    width: 6px;
-    border-radius: 3px;
-    margin-top: 6px;
-  }
+  .signal-weight .pct { font-size: 1.4rem; font-weight: 900; }
+  .signal-weight .bar { width: 6px; border-radius: 3px; margin-top: 6px; }
   .signal-detail {
     flex: 1;
     border-radius: 12px;
     padding: 20px 24px;
     position: relative;
   }
-  .signal-detail h3 {
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin-bottom: 3px;
-  }
+  .signal-detail h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 3px; }
   .signal-detail .mechanism {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.75rem;
@@ -254,11 +290,7 @@
     border-radius: 6px;
     display: inline-block;
   }
-  .signal-detail p {
-    font-size: 0.85rem;
-    color: #999;
-    line-height: 1.7;
-  }
+  .signal-detail p { font-size: 0.85rem; color: #999; line-height: 1.7; }
   .signal-detail .example {
     margin-top: 10px;
     padding: 10px 14px;
@@ -349,14 +381,8 @@
     border-radius: 12px;
     padding: 22px;
   }
-  .llm-input {
-    background: var(--surface);
-    border: 1px solid #2d1b6955;
-  }
-  .llm-output {
-    background: var(--surface);
-    border: 1px solid #1e3a5f55;
-  }
+  .llm-input { background: var(--surface); border: 1px solid #2d1b6955; }
+  .llm-output { background: var(--surface); border: 1px solid #1e3a5f55; }
   .llm-input h4 { color: var(--purple); font-size: 0.85rem; margin-bottom: 10px; }
   .llm-output h4 { color: var(--blue); font-size: 0.85rem; margin-bottom: 10px; }
   .llm-input ul {
@@ -381,14 +407,8 @@
     padding: 16px 18px;
     border: 1px solid var(--border);
   }
-  .mock-train-card .name {
-    font-weight: 700;
-    font-size: 0.95rem;
-  }
-  .mock-train-card .time {
-    color: var(--muted);
-    font-size: 0.8rem;
-  }
+  .mock-train-card .name { font-weight: 700; font-size: 0.95rem; }
+  .mock-train-card .time { color: var(--muted); font-size: 0.8rem; }
   .mock-train-card .reason-text {
     font-size: 0.85rem;
     margin-top: 8px;
@@ -407,6 +427,69 @@
   .ib-red { background: #ef444422; color: var(--red); border: 1px solid #ef444444; }
   .ib-yellow { background: #f59e0b22; color: var(--amber); border: 1px solid #f59e0b44; }
   .ib-green { background: #22c55e22; color: var(--green); border: 1px solid #22c55e44; }
+
+  /* ── AGENT GRAPH ── */
+  .agent-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 28px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .agent-node {
+    padding: 18px 22px;
+    border-radius: 14px;
+    text-align: center;
+    min-width: 130px;
+    position: relative;
+  }
+  .agent-node .name { font-weight: 800; font-size: 0.88rem; }
+  .agent-node .desc { font-size: 0.7rem; margin-top: 3px; opacity: 0.7; }
+  .agent-node .llm-tag {
+    position: absolute;
+    top: -8px; right: -8px;
+    background: var(--purple);
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+  .an-manager { background: #0d1f1a; border: 1.5px solid #1a4d2e; color: #b2f2bb; }
+  .an-classify { background: #1a1030; border: 1.5px solid #2d1b69; color: #d0bfff; }
+  .an-execute { background: #1f170d; border: 1.5px solid #4d3d1a; color: #ffd8a8; }
+  .an-respond { background: #0d1a2e; border: 1.5px solid #1e3a5f; color: #a5d8ff; }
+  .agent-arrow {
+    font-size: 1.2rem;
+    color: #333;
+    padding: 0 8px;
+  }
+
+  /* ── PIPELINE ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 32px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .pipe-node {
+    padding: 14px 20px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .pipe-node .name { font-weight: 700; font-size: 0.82rem; }
+  .pipe-node .desc { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+  .pipe-arrow { font-size: 1.2rem; color: #333; padding: 0 6px; }
+  .pn-search { background: #0d1a2e; border: 1.5px solid #1e3a5f; color: #a5d8ff; }
+  .pn-graph  { background: #0d1f1a; border: 1.5px solid #1a4d2e; color: #b2f2bb; }
+  .pn-engine { background: #1a1030; border: 1.5px solid #2d1b69; color: #d0bfff; }
+  .pn-llm    { background: #1f0d1f; border: 1.5px solid #4a1942; color: #eebefa; }
+  .pn-badge  { background: #1f170d; border: 1.5px solid #4d3d1a; color: #ffd8a8; }
 
   /* ── FLYWHEEL ── */
   .flywheel {
@@ -449,7 +532,6 @@
   .fw-n2 { top: 50%;  right: 0;  transform: translateY(-50%); background: #1a4d2e; color: #b2f2bb; border: 1.5px solid var(--green); }
   .fw-n3 { bottom: 0; left: 50%; transform: translateX(-50%); background: #2d1b69; color: #d0bfff; border: 1.5px solid var(--purple); }
   .fw-n4 { top: 50%;  left: 0;   transform: translateY(-50%); background: #3d2e0a; color: #ffd8a8; border: 1.5px solid var(--amber); }
-
   .fw-ring {
     position: absolute;
     top: 50%; left: 50%;
@@ -461,6 +543,32 @@
     animation: spin 20s linear infinite;
   }
   @keyframes spin { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+  /* ── GRID CARDS ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .g-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+  }
+  .g-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+  .g-card p { font-size: 0.82rem; color: #888; line-height: 1.6; }
+  .g-card .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    background: #00000033;
+    padding: 4px 8px;
+    border-radius: 5px;
+    display: inline-block;
+    margin-top: 8px;
+  }
 
   /* ── TECH STACK ── */
   .tech-row {
@@ -484,34 +592,47 @@
     margin-right: 4px;
   }
 
-  /* ── PIPELINE VIS ── */
-  .pipeline {
-    display: flex;
+  /* ── FEATURE COUNTER ── */
+  .feature-counter {
+    display: inline-flex;
     align-items: center;
-    gap: 0;
-    margin: 32px 0;
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #4a9eed11, #8b5cf611);
+    border: 1px solid #4a9eed22;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--blue);
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
   }
-  .pipe-node {
-    padding: 14px 20px;
-    border-radius: 12px;
-    text-align: center;
-    min-width: 120px;
+  .feature-counter .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse-dot 2s ease-in-out infinite;
   }
-  .pipe-node .icon { font-size: 1.4rem; margin-bottom: 4px; }
-  .pipe-node .name { font-weight: 700; font-size: 0.82rem; }
-  .pipe-node .desc { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
-  .pipe-arrow {
-    font-size: 1.2rem;
-    color: #333;
-    padding: 0 6px;
+  @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: #0a0a18;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: #999;
+    overflow-x: auto;
+    margin: 12px 0;
   }
-  .pn-search { background: #0d1a2e; border: 1.5px solid #1e3a5f; color: #a5d8ff; }
-  .pn-graph  { background: #0d1f1a; border: 1.5px solid #1a4d2e; color: #b2f2bb; }
-  .pn-engine { background: #1a1030; border: 1.5px solid #2d1b69; color: #d0bfff; }
-  .pn-llm    { background: #1f0d1f; border: 1.5px solid #4a1942; color: #eebefa; }
-  .pn-badge  { background: #1f170d; border: 1.5px solid #4d3d1a; color: #ffd8a8; }
+  .code-block .kw { color: var(--purple); }
+  .code-block .fn { color: var(--blue); }
+  .code-block .str { color: var(--green); }
+  .code-block .num { color: var(--amber); }
+  .code-block .cmt { color: #444; font-style: italic; }
 
   /* ── FOOTER ── */
   .footer {
@@ -522,12 +643,36 @@
     font-size: 0.8rem;
   }
 
-  /* ── DIVIDER ── */
   .divider {
     border: 0;
     border-top: 1px solid var(--border);
     margin: 0;
   }
+
+  /* ── COMPLAINT PIPELINE ── */
+  .complaint-flow {
+    display: flex;
+    gap: 2px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .cf-step {
+    flex: 1;
+    min-width: 140px;
+    padding: 16px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .cf-step .step-n {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.5;
+    margin-bottom: 4px;
+  }
+  .cf-step .step-title { font-weight: 800; font-size: 0.85rem; }
+  .cf-step .step-desc { font-size: 0.72rem; opacity: 0.6; margin-top: 3px; }
 
   /* ── RESPONSIVE ── */
   @media (max-width: 640px) {
@@ -540,6 +685,8 @@
     .signal-weight .bar { height: 6px !important; width: 30px; }
     .fusion-formula { font-size: 0.75rem; }
     .flywheel { transform: scale(0.8); transform-origin: center; }
+    .agent-flow { gap: 6px; }
+    .agent-node { min-width: 100px; padding: 12px; }
   }
 </style>
 </head>
@@ -550,15 +697,107 @@
   <div class="hero-tag">mIndicator AI Hackathon 2026</div>
   <h1>How <span class="gradient">RailFlow</span> thinks</h1>
   <p class="hero-sub">
-    A crowd intelligence engine for Mumbai's 75 lakh daily suburban commuters.
-    Three AI signals fuse into a single badge that tells you: board this train, or wait for the next one.
+    A crowd intelligence + railway safety platform for Mumbai's 75 lakh daily suburban commuters.
+    Three AI signals fuse into a real-time badge. A legal aid chatbot fights for passenger rights.
+    A police command center hunts crime patterns with AI.
   </p>
   <div class="hero-stat-row">
     <div class="hero-stat"><div class="n">2,500+</div><div class="l">Crowd Reports</div></div>
     <div class="hero-stat"><div class="n">50</div><div class="l">Trains Tracked</div></div>
     <div class="hero-stat"><div class="n">48</div><div class="l">Stations</div></div>
-    <div class="hero-stat"><div class="n">3</div><div class="l">AI Signals</div></div>
-    <div class="hero-stat"><div class="n">3</div><div class="l">Railway Lines</div></div>
+    <div class="hero-stat"><div class="n">3</div><div class="l">AI Engines</div></div>
+    <div class="hero-stat"><div class="n">3</div><div class="l">Languages</div></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ════ THREE PILLARS ════ -->
+<section class="section">
+  <div class="section-label" style="color:var(--cyan);">Three AI Pillars</div>
+  <h2>Not one feature &mdash; an interconnected intelligence system</h2>
+  <p class="section-sub">RailFlow isn't a single trick. It's three engines that feed into each other, creating a safety flywheel that gets smarter with every user interaction.</p>
+
+  <div class="card-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="callout callout-blue" style="margin:0;">
+      <h3 style="color:var(--blue);">
+        <span class="tag" style="background:#4a9eed22;color:var(--blue);">Pillar 1</span>
+      </h3>
+      <h3 style="color:var(--blue); font-size:1rem;">Crowd Intelligence</h3>
+      <p>3-signal fusion engine computes a live GREEN / YELLOW / RED badge for every train. LLM writes a human reason. Community reports feed back in real-time.</p>
+    </div>
+    <div class="callout callout-purple" style="margin:0;">
+      <h3 style="color:var(--purple);">
+        <span class="tag" style="background:#8b5cf622;color:var(--purple);">Pillar 2</span>
+      </h3>
+      <h3 style="color:var(--purple); font-size:1rem;">Jan Suraksha Bot</h3>
+      <p>AI legal aid chatbot using LangGraph agent + Zilliz RAG. Classifies crimes, extracts entities, retrieves IPC sections, auto-generates FIR/CPGRAMS/RCT forms.</p>
+    </div>
+    <div class="callout callout-red" style="margin:0;">
+      <h3 style="color:var(--red);">
+        <span class="tag" style="background:#ef444422;color:var(--red);">Pillar 3</span>
+      </h3>
+      <h3 style="color:var(--red); font-size:1rem;">Safety Intelligence</h3>
+      <p>Complaint-driven safety alerts for passengers + AI-powered police analytics dashboard with station hotspots, hourly crime patterns, and patrol recommendations.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ════ ARCHITECTURE ════ -->
+<section class="section">
+  <div class="section-label" style="color:var(--purple);">System Architecture</div>
+  <h2>Five layers, cleanly separated</h2>
+  <p class="section-sub">Each layer has a single responsibility. Swap any component without breaking others.</p>
+
+  <div class="arch-stack">
+    <div class="arch-layer layer-ui">
+      <div class="arch-label">Presentation</div>
+      <div class="arch-content">
+        <div class="arch-chip">React 19 + Vite<small>Tailwind CSS v4</small></div>
+        <div class="arch-chip">Capacitor<small>Native Android</small></div>
+        <div class="arch-chip">Train Search<small>mIndicator-inspired</small></div>
+        <div class="arch-chip">Police Dashboard<small>Tickets + Analytics</small></div>
+      </div>
+    </div>
+    <div class="arch-arrow">&darr;</div>
+    <div class="arch-layer layer-intel">
+      <div class="arch-label">Intelligence</div>
+      <div class="arch-content">
+        <div class="arch-chip">Crowd Engine<small>3-signal fusion</small></div>
+        <div class="arch-chip">Trend Detector<small>7-day vs baseline</small></div>
+        <div class="arch-chip">LLM Reasoner<small>GPT-4o-mini</small></div>
+      </div>
+    </div>
+    <div class="arch-arrow">&darr;</div>
+    <div class="arch-layer layer-safety">
+      <div class="arch-label">Safety AI</div>
+      <div class="arch-content">
+        <div class="arch-chip">Jan Suraksha<small>LangGraph agent</small></div>
+        <div class="arch-chip">Legal RAG<small>Zilliz vector search</small></div>
+        <div class="arch-chip">Alert Engine<small>24hr complaint scan</small></div>
+        <div class="arch-chip">Patrol AI<small>Deployment recs</small></div>
+      </div>
+    </div>
+    <div class="arch-arrow">&darr;</div>
+    <div class="arch-layer layer-data">
+      <div class="arch-label">Data</div>
+      <div class="arch-content">
+        <div class="arch-chip">Neo4j AuraDB<small>Graph: trains + reports</small></div>
+        <div class="arch-chip">SQLite<small>Users + complaints</small></div>
+        <div class="arch-chip">Zilliz Cloud<small>Legal embeddings</small></div>
+      </div>
+    </div>
+    <div class="arch-arrow">&darr;</div>
+    <div class="arch-layer layer-ext">
+      <div class="arch-label">External</div>
+      <div class="arch-content">
+        <div class="arch-chip">OpenWeatherMap<small>Live Mumbai weather</small></div>
+        <div class="arch-chip">OpenAI API<small>GPT-4o-mini + embeddings</small></div>
+        <div class="arch-chip">Twilio + SMTP<small>SMS &amp; email alerts</small></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -566,9 +805,9 @@
 
 <!-- ════ PIPELINE ════ -->
 <section class="section">
-  <div class="section-label" style="color:var(--cyan);">End-to-End Pipeline</div>
+  <div class="section-label" style="color:var(--cyan);">Crowd Intelligence &mdash; Pipeline</div>
   <h2>From search to badge in under 2 seconds</h2>
-  <p class="section-sub">Every train search triggers a five-stage intelligence pipeline. No cached results — every badge is computed live.</p>
+  <p class="section-sub">Every train search triggers a five-stage intelligence pipeline. No cached results &mdash; every badge is computed live.</p>
 
   <div class="pipeline">
     <div class="pipe-node pn-search">
@@ -578,7 +817,7 @@
     <div class="pipe-arrow">&rarr;</div>
     <div class="pipe-node pn-graph">
       <div class="name">Graph Query</div>
-      <div class="desc">Train matching</div>
+      <div class="desc">Neo4j Cypher</div>
     </div>
     <div class="pipe-arrow">&rarr;</div>
     <div class="pipe-node pn-engine">
@@ -600,74 +839,32 @@
 
 <hr class="divider">
 
-<!-- ════ ARCHITECTURE ════ -->
-<section class="section">
-  <div class="section-label" style="color:var(--purple);">System Architecture</div>
-  <h2>Four layers, cleanly separated</h2>
-  <p class="section-sub">Each layer has a single responsibility. Swap any component without breaking others.</p>
-
-  <div class="arch-stack">
-    <div class="arch-layer layer-ui">
-      <div class="arch-label">Presentation</div>
-      <div class="arch-content">
-        <div class="arch-chip">React PWA<small>Vite + Tailwind v4</small></div>
-        <div class="arch-chip">Train Search UI<small>mIndicator-inspired</small></div>
-        <div class="arch-chip">Jan Suraksha Bot<small>Legal aid chatbot</small></div>
-      </div>
-    </div>
-    <div class="arch-arrow">&darr;</div>
-    <div class="arch-layer layer-intel">
-      <div class="arch-label">Intelligence</div>
-      <div class="arch-content">
-        <div class="arch-chip">Crowd Engine<small>3-signal fusion</small></div>
-        <div class="arch-chip">Trend Detector<small>7-day vs baseline</small></div>
-        <div class="arch-chip">LLM Reasoner<small>GPT-4o-mini</small></div>
-      </div>
-    </div>
-    <div class="arch-arrow">&darr;</div>
-    <div class="arch-layer layer-data">
-      <div class="arch-label">Data</div>
-      <div class="arch-content">
-        <div class="arch-chip">Neo4j AuraDB<small>Graph database (cloud)</small></div>
-        <div class="arch-chip">2,500+ CrowdReports<small>3 months of data</small></div>
-        <div class="arch-chip">50 Train nodes<small>WR + CR + HR</small></div>
-      </div>
-    </div>
-    <div class="arch-arrow">&darr;</div>
-    <div class="arch-layer layer-ext">
-      <div class="arch-label">External</div>
-      <div class="arch-content">
-        <div class="arch-chip">OpenWeatherMap<small>Live Mumbai weather</small></div>
-        <div class="arch-chip">LiteLLM Proxy<small>LLM gateway</small></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
 <!-- ════ GRAPH QUERY ════ -->
 <section class="section">
-  <div class="section-label" style="color:var(--green);">Stage 1 — Graph Query</div>
-  <h2>Smart train matching via graph traversal</h2>
-  <p class="section-sub">Not a dumb table scan. The graph engine applies four filters simultaneously to return only relevant trains.</p>
+  <div class="section-label" style="color:var(--green);">Stage 1 &mdash; Smart Train Matching</div>
+  <h2>Graph-powered route intelligence</h2>
+  <p class="section-sub">Not a dumb table scan. Neo4j applies four filters simultaneously via Cypher traversal.</p>
 
-  <div style="display:flex;gap:12px;flex-wrap:wrap;margin:20px 0;">
-    <div style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;">
-      <div style="color:var(--green);font-weight:700;font-size:0.85rem;margin-bottom:6px;">Line Detection</div>
-      <div style="color:#888;font-size:0.82rem;">Automatically identifies WR, CR, or HR based on which stations appear in the search.</div>
+  <div class="card-grid">
+    <div class="g-card">
+      <h4 style="color:var(--green);">Line Detection</h4>
+      <p>Auto-identifies WR, CR, or HR based on which stations appear in the search. No user input needed.</p>
+      <div class="mono">detect_line(origin, destination) &rarr; "WR"</div>
     </div>
-    <div style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;">
-      <div style="color:var(--green);font-weight:700;font-size:0.85rem;margin-bottom:6px;">Direction Inference</div>
-      <div style="color:#888;font-size:0.82rem;">Compares station indices in the ordered line map. Borivali(6) &rarr; Churchgate(26) = southbound. Only matching trains returned.</div>
+    <div class="g-card">
+      <h4 style="color:var(--green);">Direction Inference</h4>
+      <p>Compares station indices in the ordered line map. Borivali(6) &rarr; Churchgate(26) = southbound.</p>
+      <div class="mono">idx[origin] &lt; idx[dest] &rarr; "southbound"</div>
     </div>
-    <div style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;">
-      <div style="color:var(--green);font-weight:700;font-size:0.85rem;margin-bottom:6px;">Time Window</div>
-      <div style="color:#888;font-size:0.82rem;">Shows trains departing from 15 min before to 3 hours after search time. No 5am trains in an 8am search.</div>
+    <div class="g-card">
+      <h4 style="color:var(--green);">Time Window</h4>
+      <p>Shows trains departing from 15 min before to 3 hours after search time. No 5am trains in an 8am search.</p>
+      <div class="mono">t - 15min &le; departure &le; t + 3hr</div>
     </div>
-    <div style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;">
-      <div style="color:var(--green);font-weight:700;font-size:0.85rem;margin-bottom:6px;">Route Coverage</div>
-      <div style="color:#888;font-size:0.82rem;">Verifies the train actually covers your origin &rarr; destination segment. A Bandra-Churchgate train won't appear for Virar-Churchgate.</div>
+    <div class="g-card">
+      <h4 style="color:var(--green);">Route Coverage</h4>
+      <p>Verifies the train covers your origin &rarr; destination segment. A Bandra-Churchgate train won't appear for Virar.</p>
+      <div class="mono">stops.includes(origin) && stops.includes(dest)</div>
     </div>
   </div>
 </section>
@@ -676,9 +873,9 @@
 
 <!-- ════ 3-SIGNAL ENGINE ════ -->
 <section class="section">
-  <div class="section-label" style="color:var(--amber);">Stage 2 — Intelligence Engine</div>
+  <div class="section-label" style="color:var(--amber);">Stage 2 &mdash; Intelligence Engine</div>
   <h2>Three signals, weighted fusion</h2>
-  <p class="section-sub">Each train is scored independently. No two trains get the same analysis — even on the same route.</p>
+  <p class="section-sub">Each train is scored independently. No two trains get the same analysis &mdash; even on the same route.</p>
 
   <div class="engine-grid">
     <!-- Signal 1 -->
@@ -691,14 +888,13 @@
         <h3>Historical Baseline</h3>
         <div class="mechanism">query: train_number + day_type + hour_bucket</div>
         <p>
-          Aggregates all crowd reports ever submitted for this specific train, on this type of day
-          (weekday/saturday/sunday), during this hour slot. Produces a weighted score
-          where each RED report = 100, YELLOW = 50, GREEN = 0.
+          Aggregates all crowd reports for this specific train, on this type of day
+          (weekday/saturday/sunday), during this hour slot. RED = 100, YELLOW = 50, GREEN = 0.
         </p>
         <div class="example" style="color:#a5d8ff;">
           Virar Fast 90015 | Monday | 08:00-09:00<br>
           56 reports: 40 RED, 12 YELLOW, 4 GREEN<br>
-          score = (40/56 * 100) + (12/56 * 50) = <strong>82</strong>
+          score = (40/56 &times; 100) + (12/56 &times; 50) = <strong>82</strong>
         </div>
       </div>
     </div>
@@ -713,14 +909,12 @@
         <h3>Crowd Trend Detection</h3>
         <div class="mechanism">compare: last_7_days vs all_time_baseline</div>
         <p>
-          Detects if crowding is getting <em>worse</em> or <em>better</em> than usual. Computes
-          the RED% in the last 7 days and subtracts the all-time RED%. A positive shift = worsening.
+          Detects if crowding is getting <em>worse</em> or <em>better</em> than usual.
           Catches surges from festivals, exams, strikes, or cascading delays.
         </p>
         <div class="example" style="color:#d0bfff;">
           Baseline RED% = 61% | This week RED% = 82%<br>
           Shift = +21% &rarr; trend = "spiking" &rarr; <strong>score = 85</strong><br><br>
-          Baseline RED% = 61% | This week RED% = 55%<br>
           Shift = -6% &rarr; trend = "stable" &rarr; <strong>score = 30</strong>
         </div>
       </div>
@@ -734,19 +928,27 @@
       </div>
       <div class="signal-detail sd-weather">
         <h3>Live Weather Multiplier</h3>
-        <div class="mechanism">source: OpenWeatherMap API — real-time Mumbai</div>
+        <div class="mechanism">source: OpenWeatherMap API &mdash; real-time Mumbai</div>
         <p>
-          Rain drives more commuters to trains (fewer autos/bikes). Heavy rain also causes
-          platform rushing and slippery footboards. The weather signal acts as a crowd multiplier
-          on top of the baseline.
+          Rain drives more commuters to trains. Heavy rain causes platform rushing and slippery footboards.
+          Acts as a crowd multiplier on top of the baseline.
         </p>
         <div class="example" style="color:#b2f2bb;">
-          Heavy rain (>10mm/hr) &rarr; <strong>score = 80</strong><br>
+          Heavy rain (&gt;10mm/hr) &rarr; <strong>score = 80</strong><br>
           Light rain (2-10mm/hr) &rarr; <strong>score = 45</strong><br>
           Clear / dry season &rarr; <strong>score = 0</strong>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Consensus protection -->
+  <div class="callout callout-amber">
+    <h3 style="color:var(--amber);">
+      <span class="tag" style="background:#f59e0b22;color:var(--amber);">Anti-Spam</span>
+      Threshold Consensus Protection
+    </h3>
+    <p>A single user can't flip a train's badge. The engine requires <strong>2+ recent reports to agree</strong> before shifting from the computed baseline. This prevents trolling and ensures only genuine crowd shifts are reflected.</p>
   </div>
 </section>
 
@@ -754,7 +956,7 @@
 
 <!-- ════ FUSION ════ -->
 <section class="section">
-  <div class="section-label" style="color:var(--red);">Stage 3 — Score Fusion</div>
+  <div class="section-label" style="color:var(--red);">Stage 3 &mdash; Score Fusion</div>
   <h2>Weighted sum &rarr; single badge</h2>
 
   <div class="fusion">
@@ -768,10 +970,13 @@
     <div style="color:var(--muted);font-size:0.78rem;margin-top:8px;">
       Example: (82 &times; 0.50) + (85 &times; 0.30) + (0 &times; 0.20) = 41 + 25.5 + 0 = <strong style="color:var(--amber);">67 &rarr; YELLOW</strong>
     </div>
+    <div style="color:var(--muted);font-size:0.72rem;margin-top:6px;font-style:italic;">
+      Adaptive: When weather is unavailable, weights shift to (hist &times; 0.60 + trend &times; 0.40) &mdash; no dilution
+    </div>
     <div class="badge-output">
-      <div class="badge-pill bp-green">GREEN<small>0 – 39 &mdash; Safe</small></div>
-      <div class="badge-pill bp-yellow">YELLOW<small>40 – 69 &mdash; Caution</small></div>
-      <div class="badge-pill bp-red">RED<small>70 – 100 &mdash; Avoid</small></div>
+      <div class="badge-pill bp-green">GREEN<small>0 &ndash; 39 &mdash; Board safely</small></div>
+      <div class="badge-pill bp-yellow">YELLOW<small>40 &ndash; 69 &mdash; Expect crowds</small></div>
+      <div class="badge-pill bp-red">RED<small>70 &ndash; 100 &mdash; Skip this one</small></div>
     </div>
   </div>
 </section>
@@ -780,7 +985,7 @@
 
 <!-- ════ LLM REASONING ════ -->
 <section class="section">
-  <div class="section-label" style="color:var(--pink);">Stage 4 — LLM Reasoning</div>
+  <div class="section-label" style="color:var(--pink);">Stage 4 &mdash; LLM Reasoning</div>
   <h2>Natural-language explanation per train</h2>
   <p class="section-sub">The badge alone isn't enough. GPT-4o-mini generates a tone-matched one-liner that never contradicts the badge.</p>
 
@@ -789,11 +994,11 @@
       <h4>What the LLM receives</h4>
       <ul>
         <li>Badge: RED / YELLOW / GREEN</li>
-        <li>Train name and type</li>
+        <li>Train name and type (Fast / Slow)</li>
         <li>Day type (weekday / saturday / sunday)</li>
         <li>Crowd trend (spiking / stable / improving)</li>
-        <li>Weather condition</li>
-        <li>Total report count</li>
+        <li>Weather condition (rain / clear)</li>
+        <li>Total report count + confidence level</li>
         <li>Strict tone guide per badge level</li>
       </ul>
     </div>
@@ -802,7 +1007,7 @@
       <div class="mock-train-card" style="margin-bottom:10px;">
         <span class="name">Virar Fast</span> <span class="time">08:18</span>
         <span class="inline-badge ib-red">RED</span>
-        <div class="reason-text" style="color:var(--red);">"Don't board this one — packed sardine-style since 7am."</div>
+        <div class="reason-text" style="color:var(--red);">"Don't board this one &mdash; packed sardine-style since 7am."</div>
       </div>
       <div class="mock-train-card" style="margin-bottom:10px;">
         <span class="name">Borivali Slow</span> <span class="time">08:32</span>
@@ -820,22 +1025,326 @@
 
 <hr class="divider">
 
-<!-- ════ FEEDBACK LOOP ════ -->
+<!-- ════════════════════════════════════════════════════ -->
+<!-- ════ JAN SURAKSHA BOT ════ -->
+<!-- ════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="feature-counter"><span class="dot"></span> PILLAR 2 &mdash; MOST INNOVATIVE</div>
+  <div class="section-label" style="color:var(--purple);">Jan Suraksha Bot</div>
+  <h2>AI legal aid that actually files your complaint</h2>
+  <p class="section-sub">
+    Not a FAQ chatbot. This is a LangGraph-powered stateful agent that classifies railway crimes,
+    retrieves relevant IPC sections via vector search, and auto-generates legally formatted FIR / CPGRAMS / RCT forms.
+    In 3 languages. In under 3 LLM calls per conversation.
+  </p>
+
+  <!-- Agent architecture -->
+  <div class="callout callout-purple">
+    <h3 style="color:var(--purple);">
+      <span class="tag" style="background:#8b5cf622;color:var(--purple);">Architecture</span>
+      Manager Agent Pattern (LangGraph v3)
+    </h3>
+    <p>
+      A central <strong>Manager node</strong> (pure Python, zero LLM) routes every turn.
+      It eliminates phase tracking &mdash; routing is purely data-driven based on state flags.
+      The graph is <strong>cyclic</strong>: Manager &rarr; {Classify | Execute | Respond} &rarr; Manager &rarr; END.
+    </p>
+  </div>
+
+  <div class="agent-flow">
+    <div class="agent-node an-manager">
+      <div class="name">Manager</div>
+      <div class="desc">Pure Python router</div>
+    </div>
+    <div class="agent-arrow">&rarr;</div>
+    <div class="agent-node an-classify">
+      <div class="name">Classify</div>
+      <div class="desc">Type + entities</div>
+      <div class="llm-tag">1 LLM</div>
+    </div>
+    <div class="agent-arrow">&rarr;</div>
+    <div class="agent-node an-manager">
+      <div class="name">Manager</div>
+      <div class="desc">Route decision</div>
+    </div>
+    <div class="agent-arrow">&rarr;</div>
+    <div class="agent-node an-execute">
+      <div class="name">Execute</div>
+      <div class="desc">File / lookup</div>
+      <div class="llm-tag">1-2 LLM</div>
+    </div>
+    <div class="agent-arrow">&rarr;</div>
+    <div class="agent-node an-respond">
+      <div class="name">Respond</div>
+      <div class="desc">User message</div>
+      <div class="llm-tag">1 LLM</div>
+    </div>
+  </div>
+
+  <!-- Classification -->
+  <div class="card-grid" style="margin-top:28px;">
+    <div class="g-card" style="border-color:#2d1b6944;">
+      <h4 style="color:var(--purple);">Smart Crime Classification</h4>
+      <p>
+        Single LLM call extracts: incident type (15+ categories),
+        severity (low/medium/high/critical), user intent (file_complaint, know_rights, etc.),
+        and structured entities (time, station, items lost, injuries, accused description).
+      </p>
+      <div class="mono">incident: "theft" | severity: "high" | intent: "file_complaint"</div>
+    </div>
+    <div class="g-card" style="border-color:#2d1b6944;">
+      <h4 style="color:var(--purple);">Multilingual Entity Extraction</h4>
+      <p>
+        Works in English, Hindi, and Marathi (including code-mixed). Extracts station names validated against the actual WR/CR/HR station list &mdash; rejects vague locations like "inside train".
+      </p>
+      <div class="mono">"Dadar pe phone chori" &rarr; {station: "Dadar", type: "theft"}</div>
+    </div>
+  </div>
+
+  <!-- Legal RAG -->
+  <div class="callout callout-blue" style="margin-top:20px;">
+    <h3 style="color:var(--blue);">
+      <span class="tag" style="background:#4a9eed22;color:var(--blue);">RAG</span>
+      Legal Knowledge Retrieval via Zilliz Vector Search
+    </h3>
+    <p>
+      A curated legal corpus (IPC sections, Railways Act, case law, compensation schedules) is embedded with <strong>OpenAI text-embedding-3-small</strong>
+      and stored in Zilliz Cloud. On each crime classification, the bot retrieves the <strong>top-5 relevant legal chunks</strong>, filtered by
+      incident type and jurisdiction scope (Mumbai / National). The LLM never hallucinates legal sections &mdash; it only cites what RAG retrieves.
+    </p>
+  </div>
+
+  <!-- Complaint auto-generation -->
+  <div style="margin-top:28px;">
+    <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:16px;">Complaint Auto-Generation Pipeline</h3>
+    <p style="font-size:0.85rem;color:#888;margin-bottom:16px;">From a casual chat message to a legally formatted document in 3 LLM calls total.</p>
+
+    <div class="complaint-flow">
+      <div class="cf-step" style="background:#1a1030;color:#d0bfff;border:1px solid #2d1b6944;">
+        <div class="step-n">Step 1</div>
+        <div class="step-title">Classify</div>
+        <div class="step-desc">Crime type + entities</div>
+      </div>
+      <div style="padding:0 4px;color:#333;font-size:1.2rem;">&rarr;</div>
+      <div class="cf-step" style="background:#0d1a2e;color:#a5d8ff;border:1px solid #1e3a5f44;">
+        <div class="step-n">Step 2</div>
+        <div class="step-title">RAG Retrieve</div>
+        <div class="step-desc">IPC sections + case law</div>
+      </div>
+      <div style="padding:0 4px;color:#333;font-size:1.2rem;">&rarr;</div>
+      <div class="cf-step" style="background:#1f170d;color:#ffd8a8;border:1px solid #4d3d1a44;">
+        <div class="step-n">Step 3</div>
+        <div class="step-title">FIR Context</div>
+        <div class="step-desc">Formal incident summary</div>
+      </div>
+      <div style="padding:0 4px;color:#333;font-size:1.2rem;">&rarr;</div>
+      <div class="cf-step" style="background:#0d1f1a;color:#b2f2bb;border:1px solid #1a4d2e44;">
+        <div class="step-n">Step 4</div>
+        <div class="step-title">Template Fill</div>
+        <div class="step-desc">Zero LLM &mdash; slot filling</div>
+      </div>
+      <div style="padding:0 4px;color:#333;font-size:1.2rem;">&rarr;</div>
+      <div class="cf-step" style="background:#1f0d1f;color:#eebefa;border:1px solid #4a196944;">
+        <div class="step-n">Step 5</div>
+        <div class="step-title">Save + PDF</div>
+        <div class="step-desc">SQLite + jsPDF export</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Output formats -->
+  <div class="card-grid" style="grid-template-columns: repeat(3, 1fr);margin-top:20px;">
+    <div class="g-card" style="border-color:#ef444444;">
+      <h4 style="color:var(--red);">GRP FIR Format</h4>
+      <p>Government Railway Police First Information Report. Pre-filled with incident details, IPC sections, complainant info. Ready to print and submit.</p>
+      <div class="mono">Authority: GRP (022-22694727)</div>
+    </div>
+    <div class="g-card" style="border-color:#f59e0b44;">
+      <h4 style="color:var(--amber);">CPGRAMS Portal</h4>
+      <p>Centralized Public Grievance portal format. For non-criminal complaints like overcrowding, delays, staff misconduct, infrastructure issues.</p>
+      <div class="mono">Portal: pgportal.gov.in</div>
+    </div>
+    <div class="g-card" style="border-color:#22c55e44;">
+      <h4 style="color:var(--green);">RCT Compensation</h4>
+      <p>Railway Claims Tribunal format for accidents, falls, platform gap incidents, deaths. Auto-calculates eligible compensation from legal RAG.</p>
+      <div class="mono">Min: Rs. 8,00,000 (death cases)</div>
+    </div>
+  </div>
+
+  <!-- Authority mapping -->
+  <div class="callout callout-green" style="margin-top:20px;">
+    <h3 style="color:var(--green);">
+      <span class="tag" style="background:#22c55e22;color:var(--green);">Zero LLM</span>
+      Rule-Based Authority Mapping
+    </h3>
+    <p>
+      The bot doesn't guess which authority to contact. A deterministic mapping routes each incident type to the correct body:
+      <strong>Theft/Assault &rarr; GRP</strong> |
+      <strong>Sexual Harassment &rarr; Women Helpline 182</strong> |
+      <strong>Falls/Accidents &rarr; Railway Claims Tribunal</strong> |
+      <strong>Corruption &rarr; Railway CVO</strong> |
+      <strong>Delays/Overcrowding &rarr; Rail Madad</strong>.
+      No LLM call needed &mdash; just a Python dictionary.
+    </p>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ════════════════════════════════════════════════════ -->
+<!-- ════ SAFETY INTELLIGENCE ════ -->
+<!-- ════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="feature-counter"><span class="dot"></span> PILLAR 3 &mdash; ACTIONABLE INTELLIGENCE</div>
+  <div class="section-label" style="color:var(--red);">Safety Intelligence Engine</div>
+  <h2>Complaints become intelligence &mdash; for both passengers and police</h2>
+  <p class="section-sub">
+    Every complaint filed through Jan Suraksha doesn't just sit in a database.
+    It feeds two real-time systems: passenger safety alerts and a police analytics dashboard.
+  </p>
+
+  <!-- Passenger alerts -->
+  <div class="callout callout-red">
+    <h3 style="color:var(--red);">
+      <span class="tag" style="background:#ef444422;color:var(--red);">Passengers</span>
+      Real-Time Safety Alerts
+    </h3>
+    <p>
+      Every time a passenger opens the app, the engine scans the last <strong>24 hours of complaints</strong>,
+      identifies the top crime type, computes the peak danger window, and lists the affected stations.
+      An LLM generates a <strong>2-sentence actionable advisory</strong> like:<br><br>
+      <em style="color:var(--red);">"5 theft reports in the last 24 hours, peaking between 5-7 PM at Dadar and Andheri.
+      Keep your phone in your inner pocket and avoid standing near the door."</em>
+    </p>
+  </div>
+
+  <!-- Police analytics -->
+  <div class="callout callout-blue" style="margin-top:16px;">
+    <h3 style="color:var(--blue);">
+      <span class="tag" style="background:#4a9eed22;color:var(--blue);">Police</span>
+      AI-Powered Analytics Dashboard
+    </h3>
+    <p>Six real-time analytics views, all computed from complaint data:</p>
+  </div>
+
+  <div class="card-grid" style="grid-template-columns: repeat(3, 1fr); margin-top:12px;">
+    <div class="g-card">
+      <h4 style="color:var(--blue);">Complaints by Type</h4>
+      <p>Horizontal bar chart showing incident distribution. Theft, assault, chain-snatching &mdash; all categorized with SVG icons.</p>
+    </div>
+    <div class="g-card">
+      <h4 style="color:var(--amber);">Severity Breakdown</h4>
+      <p>Color-coded bars: Critical (red), High (orange), Medium (amber), Low (blue). Helps prioritize response.</p>
+    </div>
+    <div class="g-card">
+      <h4 style="color:var(--green);">Station Hotspots</h4>
+      <p>Top 6 stations ranked by incident count. Data-driven &mdash; never invented. Shows exactly where to deploy.</p>
+    </div>
+    <div class="g-card">
+      <h4 style="color:var(--purple);">Hourly Crime Pattern</h4>
+      <p>24-hour sparkline revealing peak crime windows. Usually 5-9 PM. Helps plan patrol shifts.</p>
+    </div>
+    <div class="g-card">
+      <h4 style="color:var(--cyan);">Weekly Trend</h4>
+      <p>This week vs last week comparison. Shows if crime is rising or falling. Early warning system.</p>
+    </div>
+    <div class="g-card">
+      <h4 style="color:var(--pink);">AI Patrol Recommendation</h4>
+      <p>LLM-generated deployment suggestion: which stations, what time, what to watch for. Data-driven, never generic.</p>
+    </div>
+  </div>
+
+  <!-- Ticket management -->
+  <div style="margin-top:28px;">
+    <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:12px;">Complaint Lifecycle Management</h3>
+    <p style="font-size:0.85rem;color:#888;margin-bottom:16px;">Every complaint has a tracked lifecycle. Police officers can acknowledge, resolve, or reject with notes.</p>
+    <div class="complaint-flow">
+      <div class="cf-step" style="background:#2a0a0a;color:var(--red);border:1px solid #ef444444;">
+        <div class="step-title">Filed</div>
+        <div class="step-desc">Citizen submitted</div>
+      </div>
+      <div style="padding:0 4px;color:#333;font-size:1.2rem;">&rarr;</div>
+      <div class="cf-step" style="background:#2a1f0a;color:var(--amber);border:1px solid #f59e0b44;">
+        <div class="step-title">Acknowledged</div>
+        <div class="step-desc">Police reviewing</div>
+      </div>
+      <div style="padding:0 4px;color:#333;font-size:1.2rem;">&rarr;</div>
+      <div class="cf-step" style="background:#0a2a18;color:var(--green);border:1px solid #22c55e44;">
+        <div class="step-title">Resolved</div>
+        <div class="step-desc">Action taken</div>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:0.78rem;color:var(--muted);text-align:center;">
+      + Email &amp; SMS notifications via SMTP + Twilio on every status change
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ════ FEEDBACK FLYWHEEL ════ -->
 <section class="section" style="text-align:center;">
   <div class="section-label" style="color:var(--cyan);">The Flywheel</div>
-  <h2>Community-powered intelligence</h2>
+  <h2>Everything feeds everything</h2>
   <p class="section-sub" style="margin-left:auto;margin-right:auto;">
-    After boarding, users tap a crowd level. That report immediately feeds back into the engine.
-    The next commuter sees a more accurate badge. This creates a self-improving loop.
+    Users search trains &rarr; see badges &rarr; report crowd levels &rarr; future badges improve.
+    Users report crimes &rarr; bot files complaints &rarr; safety alerts update &rarr; police analytics sharpen.
+    Two self-improving loops running in parallel.
   </p>
 
   <div class="flywheel">
     <div class="fw-ring"></div>
-    <div class="fw-center">Crowd<br>Engine</div>
-    <div class="fw-node fw-n1">User<br>searches</div>
-    <div class="fw-node fw-n2">Sees<br>badge</div>
-    <div class="fw-node fw-n3">Reports<br>crowd</div>
-    <div class="fw-node fw-n4">Data<br>improves</div>
+    <div class="fw-center">Intelligence<br>Hub</div>
+    <div class="fw-node fw-n1">Passenger<br>searches</div>
+    <div class="fw-node fw-n2">Reports<br>crowd</div>
+    <div class="fw-node fw-n3">Files<br>complaint</div>
+    <div class="fw-node fw-n4">Alerts<br>improve</div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ════ COST & PERFORMANCE ════ -->
+<section class="section">
+  <div class="section-label" style="color:var(--teal);">Engineering Decisions</div>
+  <h2>Optimized for real-world constraints</h2>
+
+  <div class="card-grid" style="grid-template-columns: repeat(2, 1fr);">
+    <div class="callout callout-green" style="margin:0;">
+      <h3 style="color:var(--green); font-size:0.95rem;">LLM Cost Optimization</h3>
+      <p>
+        <strong>Train search:</strong> 1 LLM call (reason generation, rule-based fallback available)<br>
+        <strong>Bot chat:</strong> 2 calls (classify + respond)<br>
+        <strong>Complaint filing:</strong> 3 calls (classify + FIR context + respond)<br>
+        <strong>Legal RAG:</strong> Reuses context on re-entry &mdash; no duplicate embeddings<br>
+        <strong>All critical paths:</strong> Rule-based fallbacks if LLM is unavailable
+      </p>
+    </div>
+    <div class="callout callout-blue" style="margin:0;">
+      <h3 style="color:var(--blue); font-size:0.95rem;">Zero-Dependency Auth</h3>
+      <p>
+        No JWT library. Tokens are HMAC-SHA256 signed JSON payloads with 24-hour expiry.
+        Password hashing uses salted SHA-256 with 16-byte random salt.
+        <strong>Zero external auth dependencies</strong> &mdash; just Python's stdlib hmac + hashlib.
+      </p>
+    </div>
+    <div class="callout callout-purple" style="margin:0;">
+      <h3 style="color:var(--purple); font-size:0.95rem;">Three Databases, Three Jobs</h3>
+      <p>
+        <strong>Neo4j AuraDB:</strong> Graph queries for train relationships + crowd report aggregation<br>
+        <strong>SQLite (WAL mode):</strong> Users, complaints, auth &mdash; zero cloud dependency<br>
+        <strong>Zilliz Cloud:</strong> 1536-dim legal embeddings for semantic retrieval
+      </p>
+    </div>
+    <div class="callout callout-amber" style="margin:0;">
+      <h3 style="color:var(--amber); font-size:0.95rem;">Graceful Degradation</h3>
+      <p>
+        If OpenAI is down: rule-based reason generation kicks in.
+        If weather API fails: adaptive weights shift (hist &times; 0.60 + trend &times; 0.40).
+        If Zilliz is unreachable: bot still classifies and routes to correct authority.
+        <strong>Nothing crashes.</strong>
+      </p>
+    </div>
   </div>
 </section>
 
@@ -847,10 +1356,16 @@
   <h2>Built with</h2>
   <div class="tech-row">
     <div class="tech-badge"><strong>Neo4j AuraDB</strong>Graph database</div>
+    <div class="tech-badge"><strong>Zilliz Cloud</strong>Vector search</div>
     <div class="tech-badge"><strong>GPT-4o-mini</strong>via LiteLLM</div>
-    <div class="tech-badge"><strong>React</strong>Vite + Tailwind v4</div>
-    <div class="tech-badge"><strong>Python</strong>Backend</div>
+    <div class="tech-badge"><strong>LangGraph</strong>Agent framework</div>
+    <div class="tech-badge"><strong>FastAPI</strong>Async backend</div>
+    <div class="tech-badge"><strong>React 19</strong>Vite + Tailwind v4</div>
+    <div class="tech-badge"><strong>Capacitor</strong>Native Android</div>
+    <div class="tech-badge"><strong>SQLite</strong>WAL mode</div>
     <div class="tech-badge"><strong>OpenWeatherMap</strong>Live weather</div>
+    <div class="tech-badge"><strong>jsPDF</strong>Client-side PDF</div>
+    <div class="tech-badge"><strong>Twilio + SMTP</strong>Notifications</div>
     <div class="tech-badge"><strong>WR + CR + HR</strong>All 3 lines</div>
   </div>
 </section>

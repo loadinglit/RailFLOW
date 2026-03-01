@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import ReactMarkdown from "react-markdown"
+import { jsPDF } from "jspdf"
 import { useAuth } from "../context/AuthContext"
 import { useNavigate } from "react-router-dom"
 
@@ -29,15 +30,22 @@ const QUICK_PROMPTS = [
 ]
 
 // ── ICONS ────────────────────────────────────────────────────────
-const IconSearch  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-const IconTrain   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><rect x="4" y="3" width="16" height="13" rx="2"/><path d="M8 19h8M12 16v3M4 10h16"/></svg>
-const IconBot     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><path d="M12 2a5 5 0 0 1 5 5v2H7V7a5 5 0 0 1 5-5z"/><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="9" cy="16" r="1" fill="currentColor"/><circle cx="15" cy="16" r="1" fill="currentColor"/></svg>
-const IconSwap    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
-const IconClock   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-const IconSend    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-const IconInfo    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-const IconX       = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-const IconCheck   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><polyline points="20 6 9 16 4 11"/></svg>
+const IconSearch    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+const IconTrain     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><rect x="4" y="3" width="16" height="13" rx="2"/><path d="M8 19h8M12 16v3M4 10h16"/></svg>
+const IconBot       = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><path d="M12 2a5 5 0 0 1 5 5v2H7V7a5 5 0 0 1 5-5z"/><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="9" cy="16" r="1" fill="currentColor"/><circle cx="15" cy="16" r="1" fill="currentColor"/></svg>
+const IconSwap      = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
+const IconClock     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+const IconSend      = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+const IconInfo      = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+const IconX         = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+const IconCheck     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><polyline points="20 6 9 16 4 11"/></svg>
+const IconShield    = ({ className = "w-4 h-4" }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+const IconBarChart  = ({ className = "w-4 h-4" }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+const IconTrendUp   = ({ className = "w-4 h-4" }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+const IconCloudRain = ({ className = "w-4 h-4" }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><line x1="16" y1="13" x2="16" y2="21"/><line x1="8" y1="13" x2="8" y2="21"/><line x1="12" y1="15" x2="12" y2="23"/><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/></svg>
+const IconFileDown  = ({ className = "w-4 h-4" }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+const IconActivity  = ({ className = "w-4 h-4" }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+const IconUsers     = ({ className = "w-4 h-4" }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
 
 // ── BADGE COMPONENT ──────────────────────────────────────────────
 function CrowdBadge({ badge, label, animate = false }) {
@@ -109,7 +117,7 @@ function TrainCard({ train, onTap, isRecommended }) {
   return (
     <button
       onClick={() => onTap(train)}
-      className={`w-full text-left bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all active:scale-98 hover:shadow-md relative overflow-hidden border-l-4 ${badgeBorder} ${isRecommended ? "ring-2 ring-blue-500 ring-offset-1" : ""}`}
+      className={`w-full text-left bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all duration-200 active:scale-[0.98] hover:shadow-md relative overflow-hidden border-l-4 ${badgeBorder} ${isRecommended ? "ring-2 ring-blue-500 ring-offset-1" : ""}`}
     >
       {isRecommended && (
         <div className="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">
@@ -271,8 +279,8 @@ function CrowdPromptSheet({ train, userHash, onClose }) {
 // ── SIGNAL DETAIL CARDS ──────────────────────────────────────────
 function SignalCard({ icon, title, value, sub, color }) {
   return (
-    <div className={`flex-1 rounded-xl p-3 border ${color}`}>
-      <div className="text-lg mb-1">{icon}</div>
+    <div className={`flex-1 rounded-xl p-3 border hover:shadow-sm transition-shadow ${color}`}>
+      <div className="mb-1">{icon}</div>
       <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wide">{title}</div>
       <div className="text-sm font-bold text-gray-900 mt-0.5">{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-0.5 leading-tight">{sub}</div>}
@@ -401,30 +409,46 @@ export default function PassengerHome() {
     }
   }
 
-  const openComplaintPdf = (msg) => {
-    const w = window.open("", "_blank")
-    w.document.write(`<!DOCTYPE html><html><head><title>Complaint - Jan Suraksha</title><style>
-      @media print { body { margin: 0; } @page { margin: 1.5cm; } }
-      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.7; padding: 40px; max-width: 800px; margin: 0 auto; color: #1a1a1a; }
-      h2 { text-align: center; border-bottom: 2px solid #1e3a5f; padding-bottom: 10px; color: #1e3a5f; }
-      .meta { font-size: 12px; color: #666; text-align: right; margin-bottom: 20px; }
-      pre { white-space: pre-wrap; font-family: inherit; font-size: 14px; }
-      .footer { margin-top: 40px; font-size: 11px; color: #999; text-align: center; border-top: 1px solid #ddd; padding-top: 10px; }
-    </style></head><body>
-      <h2>Jan Suraksha — Complaint Document</h2>
-      <div class="meta">Generated: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}${msg.cpgrams_ref ? ` | Ref: ${msg.cpgrams_ref}` : ""}</div>
-      <pre>${msg.complaint_draft.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
-      <div class="footer">Generated by Jan Suraksha Bot — RailFLOW Platform</div>
-    </body></html>`)
-    w.document.close()
-    setTimeout(() => w.print(), 300)
+  const downloadComplaintPdf = (msg) => {
+    const date = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+    const refLabel = msg.cpgrams_ref ? ` | Ref: ${msg.cpgrams_ref}` : ""
+    const escapedText = msg.complaint_draft.replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+    const container = document.createElement("div")
+    container.innerHTML = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1a1a1a; line-height: 1.6; padding: 10px;">
+        <h2 style="text-align:center; border-bottom:2px solid #1e3a5f; padding-bottom:10px; color:#1e3a5f; font-size:16px; margin:0 0 12px;">
+          Jan Suraksha — Complaint Document
+        </h2>
+        <div style="font-size:10px; color:#666; text-align:right; margin-bottom:16px;">
+          Generated: ${date}${refLabel}
+        </div>
+        <pre style="white-space:pre-wrap; font-family:inherit; font-size:11px; line-height:1.5; margin:0;">${escapedText}</pre>
+        <div style="margin-top:30px; font-size:9px; color:#999; text-align:center; border-top:1px solid #ddd; padding-top:8px;">
+          Generated by Jan Suraksha Bot — RailFLOW Platform
+        </div>
+      </div>`
+    container.style.cssText = "position:fixed;left:-9999px;top:0;width:700px;"
+    document.body.appendChild(container)
+
+    const doc = new jsPDF("p", "pt", "a4")
+    doc.html(container, {
+      callback: (pdf) => {
+        pdf.save(`complaint-${msg.cpgrams_ref || "draft"}.pdf`)
+        document.body.removeChild(container)
+      },
+      x: 40,
+      y: 40,
+      width: 515,
+      windowWidth: 700,
+    })
   }
 
   return (
     <div className="min-h-screen bg-gray-50 max-w-sm mx-auto relative">
 
       {/* ── HEADER ── */}
-      <div className="bg-gradient-to-b from-blue-700 to-blue-800 pt-10 pb-4 px-4 shadow-lg">
+      <div className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 pt-10 pb-4 px-4 shadow-lg">
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -501,20 +525,22 @@ export default function PassengerHome() {
       </div>
 
       {/* ── BODY ── */}
-      <div className="pb-24">
+      <div className="pb-16">
         {tab === "trains" && (
           <div>
             {/* Results */}
             {/* Safety Alert Card */}
             {safetyAlert && results && !detailTrain && (
               <div className="px-3 pt-4 pb-0">
-                <div className={`rounded-xl border-2 p-4 ${
+                <div className={`rounded-xl border-2 p-4 shadow-sm ${
                   safetyAlert.stats?.count >= 5
                     ? "bg-red-50 border-red-200"
                     : "bg-amber-50 border-amber-200"
                 }`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-base">🛡️</span>
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                      safetyAlert.stats?.count >= 5 ? "bg-red-200 text-red-700" : "bg-amber-200 text-amber-700"
+                    }`}><IconShield className="w-3.5 h-3.5" /></div>
                     <span className={`text-xs font-bold ${
                       safetyAlert.stats?.count >= 5 ? "text-red-700" : "text-amber-700"
                     }`}>Safety Alert</span>
@@ -529,7 +555,7 @@ export default function PassengerHome() {
                       ? "border-red-200 text-red-600"
                       : "border-amber-200 text-amber-600"
                   }`}>
-                    <span>📊</span>
+                    <IconBarChart className="w-3 h-3" />
                     <span>{safetyAlert.stats?.details?.join(" · ")} · Peak: {safetyAlert.stats?.peak_window}</span>
                   </div>
                 </div>
@@ -560,7 +586,9 @@ export default function PassengerHome() {
                   </div>
                 ) : (
                   <div className="text-center py-12 text-gray-400">
-                    <div className="text-4xl mb-2">🚂</div>
+                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3 text-gray-400">
+                      <IconTrain />
+                    </div>
                     <p className="text-sm font-medium">No trains found</p>
                     <p className="text-xs mt-1">Try adjusting your route or time</p>
                   </div>
@@ -605,13 +633,13 @@ export default function PassengerHome() {
                   <div className="p-4">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">What drove this score</p>
                     <div className="flex gap-2">
-                      <SignalCard icon="📊" title="Reports" color="bg-gray-50 border-gray-200"
+                      <SignalCard icon={<IconBarChart className="w-4 h-4 text-blue-600" />} title="Reports" color="bg-gray-50 border-gray-200"
                         value={detailTrain.signals?.historical?.total > 0 ? `${detailTrain.signals.historical.total} reports` : "No data yet"}
                         sub={detailTrain.signals?.historical?.description} />
-                      <SignalCard icon="📈" title="Trend" color="bg-gray-50 border-gray-200"
+                      <SignalCard icon={<IconTrendUp className="w-4 h-4 text-indigo-600" />} title="Trend" color="bg-gray-50 border-gray-200"
                         value={detailTrain.signals?.crowd_trend?.trend ? detailTrain.signals.crowd_trend.trend.charAt(0).toUpperCase() + detailTrain.signals.crowd_trend.trend.slice(1) : "Stable"}
                         sub={detailTrain.signals?.crowd_trend?.description} />
-                      <SignalCard icon="🌧" title="Weather" color="bg-gray-50 border-gray-200"
+                      <SignalCard icon={<IconCloudRain className="w-4 h-4 text-sky-600" />} title="Weather" color="bg-gray-50 border-gray-200"
                         value={detailTrain.signals?.weather?.condition || "Clear"}
                         sub={detailTrain.signals?.weather?.description} />
                     </div>
@@ -629,7 +657,9 @@ export default function PassengerHome() {
             {/* Empty state */}
             {!results && !loading && (
               <div className="px-4 pt-8 text-center">
-                <div className="text-5xl mb-3">🚉</div>
+                <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center mx-auto mb-3 text-blue-600">
+                  <IconTrain />
+                </div>
                 <p className="text-base font-bold text-gray-700">Smart Train Search</p>
                 <p className="text-sm text-gray-400 mt-1 leading-relaxed">
                   Find trains with real-time crowd intelligence.<br/>
@@ -637,12 +667,12 @@ export default function PassengerHome() {
                 </p>
                 <div className="mt-6 grid grid-cols-3 gap-2 text-center">
                   {[
-                    { emoji: "🟢", text: "Avoid crush" },
-                    { emoji: "📊", text: "Live data" },
-                    { emoji: "🤝", text: "Community" },
-                  ].map(({ emoji, text }) => (
+                    { icon: <IconShield className="w-5 h-5" />, text: "Avoid crush", color: "text-emerald-600 bg-emerald-50" },
+                    { icon: <IconActivity className="w-5 h-5" />, text: "Live data", color: "text-blue-600 bg-blue-50" },
+                    { icon: <IconUsers className="w-5 h-5" />, text: "Community", color: "text-indigo-600 bg-indigo-50" },
+                  ].map(({ icon, text, color }) => (
                     <div key={text} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
-                      <div className="text-2xl mb-1">{emoji}</div>
+                      <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center mx-auto mb-1.5`}>{icon}</div>
                       <div className="text-xs font-semibold text-gray-600">{text}</div>
                     </div>
                   ))}
@@ -654,18 +684,20 @@ export default function PassengerHome() {
 
         {/* ── BOT TAB ── */}
         {tab === "bot" && (
-          <div className="flex flex-col h-[calc(100vh-220px)]">
-            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3">
+          <div className="flex flex-col" style={{ height: 'calc(100vh - 200px)' }}>
+            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3" style={{ paddingBottom: '80px' }}>
               {/* Empty state with quick prompts */}
               {botMessages.length === 0 && (
                 <div className="text-center pt-6 pb-4">
-                  <div className="text-4xl mb-2">🛡️</div>
+                  <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center mx-auto mb-2 text-blue-600">
+                    <IconShield className="w-6 h-6" />
+                  </div>
                   <p className="text-sm font-bold text-gray-700">Jan Suraksha Bot</p>
                   <p className="text-xs text-gray-400 mt-1">Describe your incident in any language.<br/>I'll help with legal rights, complaint filing & compensation.</p>
                   <div className="mt-5 flex flex-col gap-1.5 text-left">
                     {QUICK_PROMPTS.map((prompt, i) => (
                       <button key={i} onClick={() => sendBotMessage(prompt)} disabled={botLoading}
-                        className="text-xs bg-white hover:bg-blue-50 rounded-lg px-3 py-2.5 transition-colors border border-gray-100 text-gray-600 text-left disabled:opacity-50">
+                        className="text-xs bg-white hover:bg-blue-50 hover:border-blue-200 active:scale-[0.98] rounded-lg px-3 py-2.5 transition-all border border-gray-100 text-gray-600 text-left disabled:opacity-50">
                         {prompt}
                       </button>
                     ))}
@@ -723,9 +755,9 @@ export default function PassengerHome() {
                               <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer">View Complaint Draft</summary>
                               <div className="px-3 py-2 text-xs whitespace-pre-wrap border-t border-gray-100 max-h-60 overflow-y-auto">{msg.complaint_draft}</div>
                             </details>
-                            <button onClick={() => openComplaintPdf(msg)}
+                            <button onClick={() => downloadComplaintPdf(msg)}
                               className="mt-1 w-full flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg px-3 py-2 text-xs font-semibold hover:bg-blue-700 transition-colors">
-                              📄 Download Complaint PDF
+                              <IconFileDown className="w-3.5 h-3.5" /> Download Complaint PDF
                             </button>
                           </>
                         )}
@@ -749,7 +781,7 @@ export default function PassengerHome() {
               )}
               <div ref={botRef} />
             </div>
-            <div className="px-3 pb-4 bg-gray-50 border-t border-gray-200 pt-3">
+            <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-sm px-3 pb-3 bg-gray-50/95 backdrop-blur-sm border-t border-gray-200 pt-3 z-30">
               <div className="flex gap-2">
                 <input value={botInput} onChange={e => setBotInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendBotMessage()}
@@ -757,7 +789,7 @@ export default function PassengerHome() {
                   placeholder="Describe your incident (EN / HI / MR)..."
                   className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 disabled:bg-gray-50" />
                 <button onClick={() => sendBotMessage()} disabled={botLoading || !botInput.trim()}
-                  className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 transition-colors disabled:opacity-60">
+                  className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-60">
                   <IconSend />
                 </button>
               </div>
@@ -773,7 +805,7 @@ export default function PassengerHome() {
           { id: "bot",    label: "Suraksha", icon: <IconBot /> },
         ].map(({ id, label, icon }) => (
           <button key={id} onClick={() => setTab(id)}
-            className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${
+            className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-all active:scale-95 ${
               tab === id ? "text-blue-600" : "text-gray-400"
             }`}>
             {icon}

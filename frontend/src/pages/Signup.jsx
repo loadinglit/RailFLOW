@@ -39,7 +39,7 @@ export default function Signup() {
   return (
     <div className="min-h-screen bg-gray-50 max-w-sm mx-auto relative">
       {/* Header */}
-      <div className="bg-gradient-to-b from-blue-700 to-blue-800 pt-14 pb-8 px-6 shadow-lg">
+      <div className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 pt-14 pb-8 px-6 shadow-lg">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
             <span className="text-white font-black text-sm">m</span>
@@ -54,7 +54,7 @@ export default function Signup() {
 
       {/* Form */}
       <div className="px-5 -mt-2 pb-8">
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
           {error && (
             <div className="mb-4 bg-red-50 text-red-700 text-xs rounded-lg px-3 py-2.5 border border-red-200">
               {error}
@@ -93,7 +93,7 @@ export default function Signup() {
                 value={form.name}
                 onChange={set('name')}
                 required
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white transition-colors"
                 placeholder="Your full name"
               />
             </div>
@@ -105,7 +105,7 @@ export default function Signup() {
                 value={form.email}
                 onChange={set('email')}
                 required
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white transition-colors"
                 placeholder="your@email.com"
               />
             </div>
@@ -118,7 +118,7 @@ export default function Signup() {
                 onChange={set('password')}
                 required
                 minLength={4}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white transition-colors"
                 placeholder="Choose a password"
               />
             </div>
@@ -158,7 +158,7 @@ export default function Signup() {
                     value={form.phone}
                     onChange={set('phone')}
                     required
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white transition-colors"
                     placeholder="Phone number (e.g. 9876543210)"
                   />
                   <input
@@ -166,7 +166,7 @@ export default function Signup() {
                     value={form.address}
                     onChange={set('address')}
                     required
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white transition-colors"
                     placeholder="Home address (for FIR / complaint)"
                   />
                 </div>
@@ -176,7 +176,7 @@ export default function Signup() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-sm"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg active:scale-[0.97] transition-all disabled:opacity-50 shadow-md"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

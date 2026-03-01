@@ -31,6 +31,7 @@ from app.engines.jansuraksha.prompts import (
 )
 from app.engines.jansuraksha.mappings import get_authority_info, get_suggested_actions
 from app.engines.jansuraksha.tools import fill_complaint, fill_cpgrams
+from app.engines.jansuraksha.templates import _WR_STATIONS, _CR_STATIONS, _HR_STATIONS
 from app.utils.logger import get_logger
 
 log = get_logger("jansuraksha.agent")
@@ -126,7 +127,11 @@ def _has_enough_details(state: dict) -> bool:
     incident_type = state.get("incident_type", "general")
 
     has_when = bool(entities.get("time"))
-    has_where = bool(entities.get("location") or entities.get("from_station"))
+    # Require a real station name, not a vague location like "inside the train"
+    all_stations = _WR_STATIONS | _CR_STATIONS | _HR_STATIONS
+    from_stn = (entities.get("from_station") or "").strip().lower()
+    location = (entities.get("location") or "").strip().lower()
+    has_where = from_stn in all_stations or any(s in location for s in all_stations)
     has_what = bool(entities.get("items_lost")) if incident_type in ("theft", "robbery") else True
 
     return has_when and has_where and has_what

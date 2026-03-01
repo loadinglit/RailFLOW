@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { jsPDF } from 'jspdf'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
@@ -16,20 +17,50 @@ const SEVERITY_COLORS = {
   critical: 'bg-red-100 text-red-800',
 }
 
-const INCIDENT_ICONS = {
-  theft: '📱', robbery: '💰', assault: '👊', sexual_harassment: '🚨',
-  accident: '🚂', falling: '⬇️', death: '💀', platform_gap: '⚠️',
-  overcrowding: '👥', delay: '🕐', nuisance: '🔊', chain_pulling: '⛓️',
-  corruption: '💸', staff_misconduct: '👤', infrastructure: '🏗️',
-  stampede: '🏃', general: '📋',
+// ── SVG Mini Icons ──────────────────────────────────────────────
+const MiniShield   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+const MiniAlert    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+const MiniUser     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+const MiniClock    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+const MiniTrain    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5"><rect x="4" y="3" width="16" height="13" rx="2"/><path d="M8 19h8M12 16v3M4 10h16"/></svg>
+const MiniFile     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+const MiniUsers    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+const MiniZap      = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+
+const INCIDENT_CONFIG = {
+  theft:              { icon: MiniShield, bg: 'bg-red-100',    text: 'text-red-700' },
+  robbery:            { icon: MiniAlert,  bg: 'bg-red-100',    text: 'text-red-700' },
+  assault:            { icon: MiniZap,    bg: 'bg-orange-100', text: 'text-orange-700' },
+  sexual_harassment:  { icon: MiniAlert,  bg: 'bg-red-100',    text: 'text-red-700' },
+  accident:           { icon: MiniTrain,  bg: 'bg-amber-100',  text: 'text-amber-700' },
+  falling:            { icon: MiniAlert,  bg: 'bg-amber-100',  text: 'text-amber-700' },
+  death:              { icon: MiniAlert,  bg: 'bg-red-100',    text: 'text-red-700' },
+  platform_gap:       { icon: MiniAlert,  bg: 'bg-amber-100',  text: 'text-amber-700' },
+  overcrowding:       { icon: MiniUsers,  bg: 'bg-blue-100',   text: 'text-blue-700' },
+  delay:              { icon: MiniClock,  bg: 'bg-blue-100',   text: 'text-blue-700' },
+  nuisance:           { icon: MiniAlert,  bg: 'bg-gray-100',   text: 'text-gray-600' },
+  chain_pulling:      { icon: MiniTrain,  bg: 'bg-amber-100',  text: 'text-amber-700' },
+  corruption:         { icon: MiniFile,   bg: 'bg-purple-100', text: 'text-purple-700' },
+  staff_misconduct:   { icon: MiniUser,   bg: 'bg-purple-100', text: 'text-purple-700' },
+  infrastructure:     { icon: MiniAlert,  bg: 'bg-gray-100',   text: 'text-gray-600' },
+  stampede:           { icon: MiniUsers,  bg: 'bg-red-100',    text: 'text-red-700' },
+  general:            { icon: MiniFile,   bg: 'bg-gray-100',   text: 'text-gray-600' },
+}
+
+function IncidentIcon({ type, size = "md" }) {
+  const cfg = INCIDENT_CONFIG[type] || INCIDENT_CONFIG.general
+  const Icon = cfg.icon
+  const dim = size === "sm" ? "w-5 h-5" : "w-7 h-7"
+  return (
+    <div className={`${dim} rounded-lg ${cfg.bg} ${cfg.text} flex items-center justify-center shrink-0`}>
+      <Icon />
+    </div>
+  )
 }
 
 const STATUS_OPTIONS = ['', 'filed', 'acknowledged', 'resolved', 'rejected']
 
 function downloadComplaintPDF(complaint) {
-  const w = window.open('', '_blank', 'width=800,height=1000')
-  if (!w) return alert('Please allow popups to download the PDF')
-
   const isGRPFIR = complaint.complaint_text?.includes('FIRST INFORMATION REPORT')
     || complaint.complaint_text?.includes('प्रथम सूचना रिपोर्ट')
     || complaint.complaint_text?.includes('प्रथम खबरी अहवाल')
@@ -42,35 +73,49 @@ function downloadComplaintPDF(complaint) {
   else if (isCPGRAMS) docTitle = 'CPGRAMS Grievance Form'
   else if (isRCT) docTitle = 'RCT Compensation Application'
 
-  let htmlBody = complaint.complaint_text || 'No complaint text available'
-  htmlBody = htmlBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  htmlBody = `<pre style="font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">${htmlBody}</pre>`
+  const bodyText = (complaint.complaint_text || 'No complaint text available')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-  w.document.write(`<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>${docTitle} — ${complaint.ref}</title>
-<style>
-  @page { margin: 20mm 15mm; size: A4; }
-  body { font-family: 'Courier New', 'Noto Sans Devanagari', monospace; margin: 0; padding: 20px; color: #000; }
-  .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-  .header h2 { margin: 0; font-size: 16px; }
-  .header .ref { font-size: 11px; color: #555; margin-top: 4px; }
-  .meta { font-size: 11px; color: #333; margin-bottom: 15px; display: flex; justify-content: space-between; }
-  .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 10px; color: #777; text-align: center; }
-  .no-print { margin: 20px 0; text-align: center; }
-  .no-print button { padding: 10px 30px; font-size: 14px; cursor: pointer; background: #1d4ed8; color: white; border: none; border-radius: 6px; margin: 0 5px; }
-  @media print { .no-print { display: none; } }
-</style></head><body>
-  <div class="no-print"><button onclick="window.print()">Print / Save as PDF</button><button onclick="window.close()">Close</button></div>
-  <div class="header"><h2>${docTitle}</h2><div class="ref">Reference: ${complaint.ref} | Status: ${(complaint.status || '').toUpperCase()}</div></div>
-  <div class="meta"><span>Complainant: ${complaint.user_name || 'N/A'}</span><span>Incident: ${(complaint.incident_type || '').replace('_', ' ').toUpperCase()}</span><span>Severity: ${(complaint.severity || '').toUpperCase()}</span></div>
-  <div class="doc-body">${htmlBody}</div>
-  <div class="footer">Generated by Jan Suraksha Bot — RailFLOW Platform | ${new Date().toLocaleString('en-IN')}</div>
-</body></html>`)
-  w.document.close()
+  const container = document.createElement('div')
+  container.innerHTML = `
+    <div style="font-family: 'Courier New', 'Noto Sans Devanagari', monospace; color: #000; padding: 10px;">
+      <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:12px;">
+        <h2 style="margin:0; font-size:14px;">${docTitle}</h2>
+        <div style="font-size:9px; color:#555; margin-top:4px;">Reference: ${complaint.ref} | Status: ${(complaint.status || '').toUpperCase()}</div>
+      </div>
+      <div style="font-size:9px; color:#333; margin-bottom:12px; display:flex; justify-content:space-between;">
+        <span>Complainant: ${complaint.user_name || 'N/A'}</span>
+        <span>Incident: ${(complaint.incident_type || '').replace('_', ' ').toUpperCase()}</span>
+        <span>Severity: ${(complaint.severity || '').toUpperCase()}</span>
+      </div>
+      <pre style="font-family:'Courier New', monospace; font-size:10px; line-height:1.5; white-space:pre-wrap; word-wrap:break-word; margin:0;">${bodyText}</pre>
+      <div style="margin-top:20px; padding-top:8px; border-top:1px solid #ccc; font-size:8px; color:#777; text-align:center;">
+        Generated by Jan Suraksha Bot — RailFLOW Platform | ${new Date().toLocaleString('en-IN')}
+      </div>
+    </div>`
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:700px;'
+  document.body.appendChild(container)
+
+  const doc = new jsPDF('p', 'pt', 'a4')
+  doc.html(container, {
+    callback: (pdf) => {
+      pdf.save(`${complaint.ref || 'complaint'}.pdf`)
+      document.body.removeChild(container)
+    },
+    x: 40,
+    y: 40,
+    width: 515,
+    windowWidth: 700,
+  })
 }
 
 // ── Icons ──────────────────────────────────────────────
-const IconRefresh = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+const IconRefresh   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+const IconMapPin    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+const IconCpu       = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+const IconBarChart  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+const IconClipboard = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+const IconFileDown  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
 
 export default function PoliceDashboard() {
   const { user, logout } = useAuth()
@@ -80,8 +125,9 @@ export default function PoliceDashboard() {
   const [loading, setLoading] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
-  const [actionLoading, setActionLoading] = useState(null)
+  const [actionLoading, setActionLoading] = useState(null) // { ref, action }
   const [modal, setModal] = useState(null)
+  const [toast, setToast] = useState(null)
   const [view, setView] = useState('tickets')
   const [analytics, setAnalytics] = useState(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
@@ -124,7 +170,7 @@ export default function PoliceDashboard() {
   }, [view]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateStatus = async (ref, status, note = '') => {
-    setActionLoading(ref)
+    setActionLoading({ ref, action: status })
     try {
       const res = await fetch(`/api/complaints/${ref}/status`, {
         method: 'PATCH',
@@ -132,6 +178,9 @@ export default function PoliceDashboard() {
         body: JSON.stringify({ status, note }),
       })
       if (res.ok) {
+        const label = status === 'acknowledged' ? 'Acknowledged' : status === 'resolved' ? 'Resolved' : 'Rejected'
+        setToast(label)
+        setTimeout(() => setToast(null), 2200)
         fetchComplaints()
         setModal(null)
       }
@@ -159,7 +208,7 @@ export default function PoliceDashboard() {
     <div className="min-h-screen bg-gray-50 max-w-sm mx-auto relative">
 
       {/* ── HEADER ── */}
-      <div className="bg-gradient-to-b from-blue-700 to-blue-800 pt-10 pb-5 px-4 shadow-lg">
+      <div className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 pt-10 pb-5 px-4 shadow-lg">
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="flex items-center gap-2">
@@ -207,12 +256,12 @@ export default function PoliceDashboard() {
             { id: 'analytics', label: 'Analytics' },
           ].map(t => (
             <button key={t.id} onClick={() => setView(t.id)}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all active:scale-[0.97] ${
                 view === t.id
-                  ? 'bg-white text-blue-700'
+                  ? 'bg-white text-blue-700 shadow-sm'
                   : 'bg-blue-600/60 text-blue-200 hover:bg-blue-600'
               }`}>
-              {t.id === 'analytics' ? '📊 ' : '📋 '}{t.label}
+              <span className="inline-flex items-center gap-1.5">{t.id === 'analytics' ? <IconBarChart /> : <IconClipboard />}{t.label}</span>
             </button>
           ))}
         </div>
@@ -232,21 +281,21 @@ export default function PoliceDashboard() {
             <div className="space-y-3">
               {/* Stat cards */}
               <div className="flex gap-2">
-                <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
+                <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center hover:shadow-md transition-shadow">
                   <div className="text-2xl font-black text-gray-900">{analytics.total_complaints}</div>
-                  <div className="text-[9px] text-gray-500 font-semibold uppercase mt-0.5">Total</div>
+                  <div className="text-[10px] text-gray-500 font-semibold uppercase mt-0.5">Total</div>
                 </div>
-                <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
+                <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center hover:shadow-md transition-shadow">
                   <div className={`text-2xl font-black ${analytics.trend === 'up' ? 'text-red-600' : analytics.trend === 'down' ? 'text-emerald-600' : 'text-gray-600'}`}>
                     {analytics.trend === 'up' ? `+${analytics.this_week - analytics.last_week}` : analytics.trend === 'down' ? `${analytics.this_week - analytics.last_week}` : '0'}
                   </div>
-                  <div className="text-[9px] text-gray-500 font-semibold uppercase mt-0.5">
+                  <div className="text-[10px] text-gray-500 font-semibold uppercase mt-0.5">
                     {analytics.trend === 'up' ? 'This week' : analytics.trend === 'down' ? 'This week' : 'Stable'}
                   </div>
                 </div>
-                <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
-                  <div className="text-lg font-black text-gray-900">{INCIDENT_ICONS[analytics.by_type?.[0]?.incident_type] || '📋'}</div>
-                  <div className="text-[9px] text-gray-500 font-semibold uppercase mt-0.5">
+                <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center hover:shadow-md transition-shadow">
+                  <div className="flex justify-center"><IncidentIcon type={analytics.by_type?.[0]?.incident_type} /></div>
+                  <div className="text-[10px] text-gray-500 font-semibold uppercase mt-0.5">
                     {analytics.by_type?.[0]?.incident_type?.replace('_', ' ') || 'N/A'}
                   </div>
                 </div>
@@ -254,16 +303,16 @@ export default function PoliceDashboard() {
 
               {/* Complaints by Type — horizontal bar chart */}
               {analytics.by_type?.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Complaints by Type</p>
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
+                  <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Complaints by Type</p>
                   <div className="space-y-2">
                     {analytics.by_type.map(item => {
                       const maxCount = analytics.by_type[0]?.count || 1
                       const pct = Math.round((item.count / maxCount) * 100)
                       return (
                         <div key={item.incident_type} className="flex items-center gap-2">
-                          <span className="text-sm w-5 text-center">{INCIDENT_ICONS[item.incident_type] || '📋'}</span>
-                          <span className="text-[10px] text-gray-600 font-medium w-20 truncate">{item.incident_type?.replace('_', ' ')}</span>
+                          <IncidentIcon type={item.incident_type} size="sm" />
+                          <span className="text-xs text-gray-600 font-medium w-20 truncate">{item.incident_type?.replace('_', ' ')}</span>
                           <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
                             <div className="bg-blue-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
                           </div>
@@ -277,8 +326,8 @@ export default function PoliceDashboard() {
 
               {/* Severity Breakdown */}
               {analytics.by_severity?.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Severity Breakdown</p>
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
+                  <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Severity Breakdown</p>
                   <div className="space-y-2">
                     {analytics.by_severity.map(item => {
                       const maxCount = Math.max(...analytics.by_severity.map(s => s.count), 1)
@@ -289,7 +338,7 @@ export default function PoliceDashboard() {
                       }[item.severity] || 'bg-gray-400'
                       return (
                         <div key={item.severity} className="flex items-center gap-2">
-                          <span className="text-[10px] text-gray-600 font-medium w-14 capitalize">{item.severity}</span>
+                          <span className="text-xs text-gray-600 font-medium w-14 capitalize">{item.severity}</span>
                           <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
                             <div className={`${barColor} h-full rounded-full transition-all`} style={{ width: `${pct}%` }} />
                           </div>
@@ -303,16 +352,16 @@ export default function PoliceDashboard() {
 
               {/* Station Hotspots */}
               {analytics.by_station?.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Station Hotspots</p>
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
+                  <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Station Hotspots</p>
                   <div className="space-y-2">
                     {analytics.by_station.slice(0, 6).map(item => {
                       const maxCount = analytics.by_station[0]?.count || 1
                       const pct = Math.round((item.count / maxCount) * 100)
                       return (
                         <div key={item.from_station} className="flex items-center gap-2">
-                          <span className="text-sm w-5 text-center">📍</span>
-                          <span className="text-[10px] text-gray-600 font-medium w-24 truncate">{item.from_station}</span>
+                          <div className="w-5 h-5 rounded bg-rose-100 text-rose-600 flex items-center justify-center"><IconMapPin /></div>
+                          <span className="text-xs text-gray-600 font-medium w-24 truncate">{item.from_station}</span>
                           <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
                             <div className="bg-rose-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
                           </div>
@@ -326,9 +375,9 @@ export default function PoliceDashboard() {
 
               {/* Hourly Pattern */}
               {analytics.by_hour?.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Hourly Pattern</p>
-                  <div className="flex items-end gap-1 h-24">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
+                  <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Hourly Pattern</p>
+                  <div className="flex items-end gap-1 h-32">
                     {Array.from({ length: 24 }, (_, i) => {
                       const hourStr = String(i).padStart(2, '0')
                       const entry = analytics.by_hour.find(h => h.hour === hourStr)
@@ -339,14 +388,14 @@ export default function PoliceDashboard() {
                       return (
                         <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
                           {count > 0 && (
-                            <span className="text-[7px] text-gray-500 font-bold mb-0.5">{count}</span>
+                            <span className="text-[8px] text-gray-500 font-bold mb-0.5">{count}</span>
                           )}
                           <div
                             className={`w-full rounded-t transition-all ${count > 0 ? 'bg-blue-500' : 'bg-gray-100'}`}
                             style={{ height: count > 0 ? `${heightPct}%` : '4px' }}
                           />
                           {(i % 4 === 0) && (
-                            <span className="text-[7px] text-gray-400 mt-1">{ampm}</span>
+                            <span className="text-[8px] text-gray-400 mt-1">{ampm}</span>
                           )}
                         </div>
                       )
@@ -359,7 +408,7 @@ export default function PoliceDashboard() {
               {analytics.patrol_recommendation && (
                 <div className="bg-blue-50 rounded-xl border-2 border-blue-200 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-base">🤖</span>
+                    <div className="w-6 h-6 rounded-lg bg-blue-200 text-blue-700 flex items-center justify-center"><IconCpu /></div>
                     <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">AI Patrol Recommendation</span>
                   </div>
                   <p className="text-sm text-blue-800 leading-relaxed">{analytics.patrol_recommendation}</p>
@@ -376,7 +425,7 @@ export default function PoliceDashboard() {
 
           {!analyticsLoading && !analytics && (
             <div className="text-center text-gray-400 py-12 bg-white rounded-xl shadow-sm">
-              <div className="text-3xl mb-2">📊</div>
+              <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center mx-auto mb-2 text-gray-400"><IconBarChart /></div>
               <p className="text-sm font-medium">Analytics unavailable</p>
               <p className="text-xs mt-1">File complaints via Jan Suraksha Bot to see data here</p>
             </div>
@@ -390,9 +439,9 @@ export default function PoliceDashboard() {
         <div className="flex gap-1.5 overflow-x-auto pb-2">
           {STATUS_OPTIONS.map(s => (
             <button key={s || 'all'} onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-colors ${
+              className={`px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all active:scale-95 ${
                 statusFilter === s
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'bg-white text-gray-500 border border-gray-200'
               }`}>
               {s ? s.charAt(0).toUpperCase() + s.slice(1) : 'All'}
@@ -404,8 +453,8 @@ export default function PoliceDashboard() {
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
             className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white text-gray-600">
             <option value="">All incident types</option>
-            {Object.keys(INCIDENT_ICONS).map(t => (
-              <option key={t} value={t}>{INCIDENT_ICONS[t]} {t.replace('_', ' ')}</option>
+            {Object.keys(INCIDENT_CONFIG).map(t => (
+              <option key={t} value={t}>{t.replace('_', ' ')}</option>
             ))}
           </select>
           <button onClick={fetchComplaints}
@@ -426,18 +475,18 @@ export default function PoliceDashboard() {
 
         {!loading && complaints.length === 0 && (
           <div className="text-center text-gray-400 py-12 bg-white rounded-xl shadow-sm">
-            <div className="text-3xl mb-2">📋</div>
+            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center mx-auto mb-2 text-gray-400"><IconClipboard /></div>
             <p className="text-sm font-medium">No complaints found</p>
             <p className="text-xs mt-1">Tickets from Jan Suraksha Bot appear here</p>
           </div>
         )}
 
         {complaints.map(c => (
-          <div key={c.ref} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div key={c.ref} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200">
             {/* Header */}
             <div className="px-4 py-3">
               <div className="flex items-start gap-2.5">
-                <div className="text-xl mt-0.5">{INCIDENT_ICONS[c.incident_type] || '📋'}</div>
+                <IncidentIcon type={c.incident_type} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap mb-1">
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${STATUS_COLORS[c.status] || ''}`}>
@@ -494,7 +543,7 @@ export default function PoliceDashboard() {
                 </details>
                 <button onClick={() => downloadComplaintPDF(c)}
                   className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-semibold hover:bg-blue-700 transition-colors">
-                  📄 Download FIR / Complaint PDF
+                  <IconFileDown /> Download FIR / Complaint PDF
                 </button>
               </div>
             )}
@@ -502,16 +551,18 @@ export default function PoliceDashboard() {
             {/* Action Buttons — filed */}
             {c.status === 'filed' && (
               <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex gap-2">
-                <button onClick={() => updateStatus(c.ref, 'acknowledged')} disabled={actionLoading === c.ref}
-                  className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-[10px] font-bold hover:bg-amber-600 disabled:opacity-50">
-                  Acknowledge
+                <button onClick={() => updateStatus(c.ref, 'acknowledged')} disabled={actionLoading?.ref === c.ref}
+                  className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-[10px] font-bold hover:bg-amber-600 active:scale-[0.97] transition-all disabled:opacity-60">
+                  {actionLoading?.ref === c.ref && actionLoading?.action === 'acknowledged'
+                    ? <span className="flex items-center justify-center gap-1"><span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Updating...</span>
+                    : 'Acknowledge'}
                 </button>
-                <button onClick={() => openModal(c.ref, 'resolved')} disabled={actionLoading === c.ref}
-                  className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 disabled:opacity-50">
+                <button onClick={() => openModal(c.ref, 'resolved')} disabled={actionLoading?.ref === c.ref}
+                  className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 active:scale-[0.97] transition-all disabled:opacity-60">
                   Resolve
                 </button>
-                <button onClick={() => openModal(c.ref, 'rejected')} disabled={actionLoading === c.ref}
-                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-[10px] font-bold hover:bg-red-600 disabled:opacity-50">
+                <button onClick={() => openModal(c.ref, 'rejected')} disabled={actionLoading?.ref === c.ref}
+                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-[10px] font-bold hover:bg-red-600 active:scale-[0.97] transition-all disabled:opacity-60">
                   Reject
                 </button>
               </div>
@@ -520,12 +571,12 @@ export default function PoliceDashboard() {
             {/* Action Buttons — acknowledged */}
             {c.status === 'acknowledged' && (
               <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex gap-2">
-                <button onClick={() => openModal(c.ref, 'resolved')} disabled={actionLoading === c.ref}
-                  className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 disabled:opacity-50">
+                <button onClick={() => openModal(c.ref, 'resolved')} disabled={actionLoading?.ref === c.ref}
+                  className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 active:scale-[0.97] transition-all disabled:opacity-60">
                   Resolve
                 </button>
-                <button onClick={() => openModal(c.ref, 'rejected')} disabled={actionLoading === c.ref}
-                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-[10px] font-bold hover:bg-red-600 disabled:opacity-50">
+                <button onClick={() => openModal(c.ref, 'rejected')} disabled={actionLoading?.ref === c.ref}
+                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-[10px] font-bold hover:bg-red-600 active:scale-[0.97] transition-all disabled:opacity-60">
                   Reject
                 </button>
               </div>
@@ -563,8 +614,8 @@ export default function PoliceDashboard() {
             </div>
 
             <div className="px-5 py-3 bg-gray-50 rounded-b-2xl flex gap-2">
-              <button onClick={() => setModal(null)}
-                className="flex-1 py-2.5 text-sm text-gray-600 font-medium bg-white border border-gray-200 rounded-xl">
+              <button onClick={() => setModal(null)} disabled={!!actionLoading}
+                className="flex-1 py-2.5 text-sm text-gray-600 font-medium bg-white border border-gray-200 rounded-xl disabled:opacity-50">
                 Cancel
               </button>
               <button
@@ -572,15 +623,27 @@ export default function PoliceDashboard() {
                   if (modal.action === 'rejected' && !modal.note.trim()) return
                   updateStatus(modal.ref, modal.action, modal.note)
                 }}
-                disabled={modal.action === 'rejected' && !modal.note.trim()}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-50 ${
+                disabled={(modal.action === 'rejected' && !modal.note.trim()) || !!actionLoading}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all active:scale-[0.97] disabled:opacity-60 ${
                   modal.action === 'resolved'
                     ? 'bg-emerald-600 hover:bg-emerald-700'
                     : 'bg-red-500 hover:bg-red-600'
                 }`}>
-                {modal.action === 'resolved' ? 'Resolve' : 'Reject'}
+                {actionLoading?.ref === modal.ref
+                  ? <span className="flex items-center justify-center gap-1.5"><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Updating...</span>
+                  : modal.action === 'resolved' ? 'Resolve' : 'Reject'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Toast */}
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] animate-toast-in">
+          <div className="flex items-center gap-2 bg-gray-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg">
+            <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            {toast}
           </div>
         </div>
       )}
@@ -591,6 +654,11 @@ export default function PoliceDashboard() {
           to { transform: translateY(0); }
         }
         .animate-slide-up { animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+        @keyframes toast-in {
+          0% { opacity: 0; transform: translateY(-12px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-toast-in { animation: toast-in 0.25s ease-out; }
       `}</style>
     </div>
   )
