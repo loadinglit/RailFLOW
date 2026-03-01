@@ -36,6 +36,113 @@ from app.utils.logger import get_logger
 
 log = get_logger("jansuraksha.agent")
 
+import re as _re
+
+# ── Sensitive Content Handling ───────────────────────────────
+# Azure OpenAI's content filter blocks explicit descriptions of sexual
+# assault/harassment even when the context is legitimate legal-aid.
+# Pre-screen → rule-based classify + regex entity extraction → sanitised
+# message for downstream LLM calls.  Zero API waste, zero user-facing errors.
+
+_SENSITIVE_KEYWORDS = frozenset({
+    "sexual", "molest", "groping", "grope", "rape",
+    "touched inappropriately", "inappropriate touch",
+    "eve teasing", "molestation", "indecent", "obscene",
+    "यौन", "बलात्कार", "छेड़छाड़", "छेड़", "उत्पीड़न",
+    "लैंगिक", "छळ", "विनयभंग",
+})
+
+
+def _is_sensitive_content(message: str) -> bool:
+    """Return True if the message will trigger Azure's content filter."""
+    msg_lower = message.lower()
+    return any(kw in msg_lower for kw in _SENSITIVE_KEYWORDS)
+
+
+def _extract_entities_regex(message: str) -> dict:
+    """Best-effort entity extraction via regex (no LLM)."""
+    entities = {
+        "time": None, "location": None, "from_station": None,
+        "to_station": None, "items_lost": None, "accused_description": None,
+        "injuries": None, "platform": None, "train_name": None,
+        "travel_class": None,
+    }
+    msg_lower = message.lower()
+
+    # Time
+    m = _re.search(r'(\d{1,2})\s*(?::\d{2})?\s*(am|pm)', msg_lower)
+    if m:
+        entities["time"] = m.group(0).strip()
+
+    # Stations — match longest names first
+    all_stations = _WR_STATIONS | _CR_STATIONS | _HR_STATIONS
+    found = []
+    for stn in sorted(all_stations, key=len, reverse=True):
+        if stn in msg_lower and stn not in found:
+            found.append(stn)
+    if found:
+        entities["from_station"] = found[0]
+        entities["location"] = found[0]
+        if len(found) > 1:
+            entities["to_station"] = found[1]
+
+    # Travel class
+    for pat, cls in {
+        "first class": "First Class", "1st class": "First Class",
+        "second class": "Second Class", "2nd class": "Second Class",
+        "general": "General", "ladies": "Ladies",
+    }.items():
+        if pat in msg_lower:
+            entities["travel_class"] = cls
+            break
+
+    # Accused description
+    for pat in [r'(?:group of|bunch of)\s+\w+',
+                r'(?:a |an )\w+\s+(?:man|men|person|people|guy|guys)']:
+        m = _re.search(pat, msg_lower)
+        if m:
+            entities["accused_description"] = m.group(0)
+            break
+
+    return entities
+
+
+def _sanitize_message(message: str, incident_type: str, entities: dict) -> str:
+    """Replace explicit content with clinical/legal terms for Azure compliance."""
+    if incident_type != "sexual_harassment":
+        return message
+
+    parts = ["The complainant reports a serious incident of physical assault and harassment"]
+    if entities.get("from_station") and entities.get("to_station"):
+        parts.append(f"while travelling from {entities['from_station'].title()} to {entities['to_station'].title()}")
+    elif entities.get("from_station"):
+        parts.append(f"at/near {entities['from_station'].title()} station")
+    loc = entities.get("location")
+    if loc and loc != entities.get("from_station"):
+        parts.append(f"near {loc.title()} station")
+    if entities.get("time"):
+        parts.append(f"at approximately {entities['time']}")
+    if entities.get("travel_class"):
+        parts.append(f"in {entities['travel_class']} compartment")
+    if entities.get("accused_description"):
+        parts.append(f"by {entities['accused_description']}")
+    parts.append("during their railway journey. The incident falls under IPC Section 354A and the POSH Act 2013.")
+    return " ".join(parts)
+
+
+_SENSITIVE_RESPONSES = {
+    "show_options": {
+        "en": "I'm really sorry this happened to you. What you experienced is a serious crime, and you have every right to seek justice. Your safety is the top priority right now. Please select an option below so I can help you take the next step immediately.",
+        "hi": "मुझे बहुत दुख है कि आपके साथ यह हुआ। यह एक गंभीर अपराध है और आपको न्याय पाने का पूरा अधिकार है। अभी आपकी सुरक्षा सबसे ज़रूरी है। कृपया नीचे एक विकल्प चुनें ताकि मैं तुरंत आपकी मदद कर सकूं।",
+        "mr": "तुम्हाला हे सहन करावे लागले याबद्दल मला खूप वाईट वाटते. हा एक गंभीर गुन्हा आहे आणि तुम्हाला न्याय मिळवण्याचा पूर्ण अधिकार आहे. तुमची सुरक्षा सर्वात महत्त्वाची आहे. कृपया खालील एक पर्याय निवडा.",
+    },
+    "ask_details": {
+        "en": "I'm so sorry you're going through this. To help you file a strong complaint, could you share when and where this happened? Even approximate details will help.",
+        "hi": "मुझे बहुत दुख है। एक मज़बूत शिकायत दर्ज करने के लिए, क्या आप बता सकते हैं यह कब और कहाँ हुआ?",
+        "mr": "तुम्हाला हे सहन करावे लागले याबद्दल खूप वाईट वाटते. एक मजबूत तक्रार दाखल करण्यासाठी, कृपया हे कधी आणि कुठे घडले ते सांगा.",
+    },
+}
+
 
 # ── State = The TopicHolder ──────────────────────────────────
 # Shared across ALL nodes. Every node reads and writes here.
@@ -60,6 +167,7 @@ class BotState(TypedDict, total=False):
     # Per-turn control (reset each invocation via run_agent)
     classified_this_turn: bool  # has classify run this turn?
     response_ready: bool        # is the response ready to send?
+    sensitive_content: bool     # Azure content-filter bypass active?
 
     # Manager → tool node instructions
     next_step: str              # "classify" | "execute" | "respond" | "done"
@@ -239,39 +347,50 @@ def classify_node(state: BotState) -> dict:
             log.error("[classify] Neo4j FAILED: %s", e)
             user_ctx = {"user_id": user_id, "found": False}
 
-    # ── 2. Smart classify (1 LLM call) ──
+    # ── 2. Smart classify ──
+    # Check for sensitive content FIRST — Azure blocks sexual assault descriptions
     incident_type = "general"
     severity = "medium"
     detected_action = None
     new_entities = {}
+    sensitive = _is_sensitive_content(latest_msg)
 
-    try:
-        client = get_openai_client()
-        response = client.chat.completions.create(
-            model=MODEL_FAST,
-            messages=[
-                {"role": "system", "content": SMART_CLASSIFY_SYSTEM},
-                {"role": "user", "content": latest_msg},
-            ],
-            temperature=0,
-            max_tokens=300,
-        )
-        raw = response.choices[0].message.content.strip()
-        if raw.startswith("```"):
-            raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+    if sensitive:
+        # Rule-based classification — skip LLM entirely
+        incident_type = "sexual_harassment"
+        severity = "critical"
+        new_entities = _extract_entities_regex(latest_msg)
+        log.info("[classify] SENSITIVE content — rule-based: type=%s, entities=%s",
+                 incident_type, [k for k, v in new_entities.items() if v])
+    else:
+        # Normal LLM classification (1 call)
+        try:
+            client = get_openai_client()
+            response = client.chat.completions.create(
+                model=MODEL_FAST,
+                messages=[
+                    {"role": "system", "content": SMART_CLASSIFY_SYSTEM},
+                    {"role": "user", "content": latest_msg},
+                ],
+                temperature=0,
+                max_tokens=300,
+            )
+            raw = response.choices[0].message.content.strip()
+            if raw.startswith("```"):
+                raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
-        result = json.loads(raw)
-        incident_type = result.get("incident_type", "general")
-        severity = result.get("severity", "medium")
-        user_intent = result.get("user_intent", "none")
-        new_entities = result.get("entities", {})
-        detected_action = user_intent if user_intent and user_intent != "none" else None
+            result = json.loads(raw)
+            incident_type = result.get("incident_type", "general")
+            severity = result.get("severity", "medium")
+            user_intent = result.get("user_intent", "none")
+            new_entities = result.get("entities", {})
+            detected_action = user_intent if user_intent and user_intent != "none" else None
 
-        log.info("[classify] type=%s, severity=%s, intent=%s, entities=%s",
-                 incident_type, severity, detected_action or "none",
-                 [k for k, v in new_entities.items() if v])
-    except Exception as e:
-        log.error("[classify] LLM FAILED: %s", e)
+            log.info("[classify] type=%s, severity=%s, intent=%s, entities=%s",
+                     incident_type, severity, detected_action or "none",
+                     [k for k, v in new_entities.items() if v])
+        except Exception as e:
+            log.error("[classify] LLM FAILED: %s", e)
 
     # ── 2b. Merge entities (fill nulls, don't overwrite) ──
     existing_entities = state.get("entities", {})
@@ -330,6 +449,7 @@ def classify_node(state: BotState) -> dict:
 
     return {
         "classified_this_turn": True,
+        "sensitive_content": sensitive,
         "original_message": original_msg,
         "user_context": user_ctx,
         "incident_type": incident_type,
@@ -364,27 +484,34 @@ def respond_node(state: BotState) -> dict:
     # ── ask_details or show_options → use conditional prompt ──
     prompt_mode = "ask_details" if mode == "ask_details" else "show_options"
 
-    try:
-        client = get_openai_client()
-        conditional = build_conditional_sections(prompt_mode, state)
-        system_prompt = RESPONSE_GENERATION_SYSTEM.format(
-            language=language,
-            conditional_sections=conditional,
-        )
+    # Sensitive content → pre-written empathetic response (skip LLM)
+    if state.get("sensitive_content") and prompt_mode in _SENSITIVE_RESPONSES:
+        lang_code = state.get("language", "en")
+        response_text = _SENSITIVE_RESPONSES[prompt_mode].get(lang_code,
+                            _SENSITIVE_RESPONSES[prompt_mode]["en"])
+        log.info("[respond] SENSITIVE — using pre-written %s response", prompt_mode)
+    else:
+        try:
+            client = get_openai_client()
+            conditional = build_conditional_sections(prompt_mode, state)
+            system_prompt = RESPONSE_GENERATION_SYSTEM.format(
+                language=language,
+                conditional_sections=conditional,
+            )
 
-        response = client.chat.completions.create(
-            model=MODEL_FAST,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": state.get("original_message", "")},
-            ],
-            temperature=0.4,
-            max_tokens=250,
-        )
-        response_text = response.choices[0].message.content
-    except Exception as e:
-        log.error("[respond] FAILED: %s", e)
-        response_text = "I understand your concern. Could you share a few more details so I can help you better?"
+            response = client.chat.completions.create(
+                model=MODEL_FAST,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": state.get("original_message", "")},
+                ],
+                temperature=0.4,
+                max_tokens=250,
+            )
+            response_text = response.choices[0].message.content
+        except Exception as e:
+            log.error("[respond] FAILED: %s", e)
+            response_text = "I understand your concern. Could you share a few more details so I can help you better?"
 
     # KEY: only include options when we have enough details
     options = state.get("suggested_actions") if mode == "show_options" else None
@@ -419,10 +546,16 @@ You are helping this user with a railway incident:
 
 Respond helpfully and concisely. Maximum 4-5 sentences."""
 
+    is_sensitive = state.get("sensitive_content", False)
+    entities = state.get("entities", {})
+    inc_type = state.get("incident_type", "general")
+
     llm_messages = [{"role": "system", "content": system_msg}]
     for msg in state.get("messages", []):
         if isinstance(msg, HumanMessage):
-            llm_messages.append({"role": "user", "content": msg.content})
+            content = (_sanitize_message(msg.content, inc_type, entities)
+                       if is_sensitive else msg.content)
+            llm_messages.append({"role": "user", "content": content})
         elif isinstance(msg, AIMessage):
             llm_messages.append({"role": "assistant", "content": msg.content})
 
@@ -456,6 +589,10 @@ def _generate_fir_context(state: dict) -> dict:
     original_msg = state.get("original_message", "")
     language = state.get("language", "en")
     legal_context = state.get("legal_context", [])
+
+    # Sanitize for Azure content filter
+    if state.get("sensitive_content"):
+        original_msg = _sanitize_message(original_msg, incident_type, entities)
 
     lang_name = {"en": "English", "hi": "Hindi", "mr": "Marathi"}.get(language, "English")
     ent_str = json.dumps({k: v for k, v in entities.items() if v}, ensure_ascii=False)
@@ -615,6 +752,16 @@ def execute_node(state: BotState) -> dict:
         state_for_prompt = state
 
     # ── Step 2: Conversational summary (1 LLM call) ──
+    # Sanitize original_message for Azure content filter compliance
+    user_msg_for_llm = state.get("original_message", "")
+    if state.get("sensitive_content"):
+        user_msg_for_llm = _sanitize_message(
+            user_msg_for_llm, state.get("incident_type", "general"),
+            state.get("entities", {}))
+        # Also sanitize the state copy so build_conditional_sections is clean
+        state_for_prompt = {**state_for_prompt,
+                            "original_message": user_msg_for_llm}
+
     try:
         client = get_openai_client()
         conditional = build_conditional_sections(action_id, state_for_prompt)
@@ -626,7 +773,7 @@ def execute_node(state: BotState) -> dict:
             model=MODEL_FAST,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": state.get("original_message", "")},
+                {"role": "user", "content": user_msg_for_llm},
             ],
             temperature=0.3,
             max_tokens=400,
@@ -738,6 +885,8 @@ async def run_agent(user_id: str, message: str, language: str = "en") -> dict:
         "user_id": user_id,
         "language": language,
         # Reset per-turn flags so manager starts fresh
+        # NOTE: sensitive_content is NOT reset — it persists via checkpoint
+        # so execute_node on turn 2 still knows to sanitize the original_message
         "classified_this_turn": False,
         "response_ready": False,
         "current_action": None,
