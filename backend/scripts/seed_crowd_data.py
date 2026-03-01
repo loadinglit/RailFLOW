@@ -104,19 +104,62 @@ _COMMUTER_HASHES = [
 ]
 
 
+
+# ── KNOWN RED-FLAGGED TRAINS (peak hour, verified crowded) ──────
+# Source: TravelKhana, MetroTrainTimings, ixigo, e-Train schedules
+_RED_FLAG_TRAINS = {
+    # WR — Virar → Churchgate (morning peak)
+    "90234", "90216", "90222", "90320", "92014", "90190", "90404",
+    # WR — Churchgate → Virar (evening peak)
+    "90757", "90775", "90819", "90897", "90913",
+    # CR — Kalyan → CST (morning peak)
+    "95704", "95202", "97026", "95402",
+    # CR — CST → Kalyan (evening peak)
+    "95727", "95733", "95735",
+    # HR — Panvel → CST (morning peak)
+    "98016", "98028",
+}
+
+# ── KNOWN YELLOW-FLAGGED TRAINS (moderate crowding, caution) ────
+# Shoulder peak hours, semi-fast trains, and transition periods
+_YELLOW_FLAG_TRAINS = {
+    # WR — Virar → Churchgate (shoulder of morning peak)
+    "90300", "90338", "90352", "90372",
+    # WR — Churchgate → Virar (shoulder of evening peak)
+    "90725", "90743", "90805", "90825",
+    "90925", "90931", "90949", "90969",
+    # CR — Kalyan → CST (shoulder of morning peak)
+    "95060", "95064", "95070", "95074",
+    # CR — CST → Kalyan (shoulder of evening peak)
+    "95141", "95143", "95147", "95154", "95158",
+    "95194", "95196",
+    # HR — Panvel → CST (shoulder)
+    "21020", "21022", "21024", "21026",
+}
+
+
 def get_crowd_distribution(train, day_type, hour):
     """
     Returns RED/YELLOW/GREEN distribution based on real Mumbai patterns.
     Uses train origin, destination, type, line, direction, day, and hour.
     """
+    num = train["number"]
     origin = train["origin"]
     dest = train["dest"]
     line = train["line"]
     typ = train["type"]
     h = int(hour.split(":")[0]) if isinstance(hour, str) else hour
     is_southbound = dest in ("Churchgate", "CST")
-    is_fast = typ in ("FAST", "SEMI_FAST")
+    is_fast = typ in ("FAST", "SEMI_FAST", "SEMI FAST")
     is_slow = typ == "SLOW"
+
+    # ── Override: verified RED-flagged trains ──
+    if num in _RED_FLAG_TRAINS and day_type == "weekday":
+        return {"RED": 82, "YELLOW": 14, "GREEN": 4}
+
+    # ── Override: verified YELLOW-flagged trains ──
+    if num in _YELLOW_FLAG_TRAINS and day_type == "weekday":
+        return {"RED": 18, "YELLOW": 62, "GREEN": 20}
 
     # AC LOCAL trains are always less crowded (premium fare)
     if typ == "AC":
@@ -271,16 +314,21 @@ def generate_reports(all_trains, n=5000):
     end_date = datetime(2026, 2, 28)
     total_days = (end_date - start_date).days
 
-    # Build weighted train pool — peak hour trains get more reports
+    # Build weighted train pool — RED/YELLOW flagged trains get massive report weight
     train_weights = []
     for t in all_trains:
         h = int(t["depart"].split(":")[0])
+        num = t["number"]
         w = 1.0
-        if 7 <= h <= 9 or 17 <= h <= 19:
+        if num in _RED_FLAG_TRAINS:
+            w = 20.0  # guaranteed heavy coverage
+        elif num in _YELLOW_FLAG_TRAINS:
+            w = 15.0  # strong coverage
+        elif 7 <= h <= 9 or 17 <= h <= 19:
             w = 4.0
         elif 6 <= h <= 10 or 16 <= h <= 20:
             w = 2.0
-        if t["type"] == "FAST":
+        if t["type"] in ("FAST", "SEMI_FAST", "SEMI FAST"):
             w *= 1.5
         train_weights.append(w)
 

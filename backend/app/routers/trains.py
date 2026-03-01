@@ -94,7 +94,7 @@ async def search_trains(req: SearchRequest):
             "train_number": train_num,
             "train_name": train.get("name"),
             "train_type": train.get("type"),
-            "erail_type": train.get("erail_type") or train.get("train_type", ""),
+            "erail_type": train.get("train_type", ""),
             "line": train.get("line"),
             "origin": train.get("origin"),
             "destination": train.get("destination"),

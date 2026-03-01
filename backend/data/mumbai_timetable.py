@@ -80,9 +80,11 @@ _WR_VIRAR_TO_CCG_RAW = [
     ("90156", "6:41 am", "8:22 am", "SLOW"),
     ("90158", "6:45 am", "8:25 am", "SLOW"),
     ("90166", "6:53 am", "8:11 am", "FAST"),
+    ("90190", "7:09 am", "8:30 am", "SEMI FAST"),
     ("90192", "7:09 am", "8:37 am", "FAST"),
-    ("90216", "7:30 am", "8:56 am", "FAST"),
+    ("90216", "7:30 am", "8:56 am", "SEMI FAST"),
     ("90222", "7:35 am", "9:17 am", "SLOW"),
+    ("90234", "7:30 am", "9:12 am", "SLOW"),
     ("90230", "7:40 am", "9:06 am", "FAST"),
     ("90250", "7:57 am", "9:24 am", "FAST"),
     ("90270", "8:09 am", "9:37 am", "FAST"),
@@ -94,6 +96,8 @@ _WR_VIRAR_TO_CCG_RAW = [
     ("90352", "9:15 am", "10:46 am", "FAST"),
     ("90372", "9:34 am", "11:00 am", "FAST"),
     ("90402", "9:55 am", "11:17 am", "FAST"),
+    ("90404", "9:59 am", "11:20 am", "SEMI FAST"),
+    ("92014", "8:09 am", "9:30 am", "FAST"),
     ("90424", "10:15 am", "11:36 am", "FAST"),
     ("90430", "10:22 am", "11:46 am", "FAST"),
     ("90442", "10:39 am", "12:06 pm", "FAST"),
@@ -232,16 +236,21 @@ _WR_CCG_TO_VIRAR_RAW = [
     ("90725", "3:56 pm", "5:15 pm", "FAST"),
     ("90743", "4:13 pm", "5:36 pm", "FAST"),
     ("90751", "4:21 pm", "5:45 pm", "FAST"),
+    ("90757", "4:21 pm", "5:48 pm", "SEMI FAST"),
     ("90767", "4:42 pm", "6:08 pm", "FAST"),
+    ("90775", "4:42 pm", "6:10 pm", "SEMI FAST"),
     ("90781", "4:55 pm", "6:19 pm", "FAST"),
     ("90805", "5:19 pm", "6:36 pm", "FAST"),
+    ("90819", "4:55 pm", "6:20 pm", "SEMI FAST"),
     ("90825", "5:36 pm", "6:59 pm", "FAST"),
     ("90857", "5:55 pm", "7:26 pm", "FAST"),
     ("90867", "6:05 pm", "7:47 pm", "SLOW"),
     ("90873", "6:11 pm", "7:38 pm", "FAST"),
     ("90875", "6:13 pm", "7:56 pm", "SLOW"),
     ("90887", "6:22 pm", "7:51 pm", "FAST"),
+    ("90897", "6:22 pm", "7:55 pm", "SEMI FAST"),
     ("90903", "6:36 pm", "8:05 pm", "FAST"),
+    ("90913", "6:36 pm", "8:08 pm", "SEMI FAST"),
     ("90925", "6:52 pm", "8:18 pm", "FAST"),
     ("90931", "6:58 pm", "8:22 pm", "FAST"),
     ("90949", "7:17 pm", "8:43 pm", "FAST"),
@@ -287,6 +296,10 @@ _CR_KALYAN_TO_CST_RAW = [
     ("95012", "6:44 am", "7:45 am", "FAST"),
     ("95014", "7:02 am", "7:45 am", "FAST"),  # actually via Fast from 7:14
     ("95016", "7:17 am", "8:47 am", "SLOW"),
+    ("95202", "7:19 am", "8:52 am", "SLOW"),
+    ("95402", "7:24 am", "8:55 am", "SLOW"),
+    ("95704", "7:14 am", "8:15 am", "SEMI FAST"),
+    ("97026", "7:20 am", "8:22 am", "SEMI FAST"),
     ("95018", "7:19 am", "8:20 am", "FAST"),
     ("95020", "7:22 am", "8:24 am", "FAST"),
     ("95022", "7:25 am", "8:28 am", "FAST"),
@@ -483,6 +496,7 @@ _CR_CST_TO_KALYAN_RAW = [
     ("95155", "5:41 pm", "6:40 pm", "FAST"),
     ("95157", "5:44 pm", "6:44 pm", "FAST"),
     ("95159", "5:56 pm", "6:58 pm", "FAST"),
+    ("95727", "6:03 pm", "7:05 pm", "SEMI FAST"),
     ("95161", "5:59 pm", "7:02 pm", "FAST"),
     # 6pm-midnight
     ("95163", "6:06 pm", "7:07 pm", "FAST"),
@@ -496,11 +510,13 @@ _CR_CST_TO_KALYAN_RAW = [
     ("95179", "6:47 pm", "7:47 pm", "FAST"),
     ("95181", "6:53 pm", "7:55 pm", "FAST"),
     ("95183", "6:57 pm", "8:10 pm", "SEMI FAST"),
+    ("95733", "6:56 pm", "8:00 pm", "SEMI FAST"),
     ("95185", "7:01 pm", "8:01 pm", "FAST"),
     ("95187", "7:17 pm", "8:17 pm", "FAST"),
     ("95189", "7:21 pm", "8:20 pm", "FAST"),
     ("95191", "7:24 pm", "8:24 pm", "FAST"),
     ("95193", "7:30 pm", "8:32 pm", "FAST"),
+    ("95735", "7:33 pm", "8:40 pm", "SEMI FAST"),
     ("95195", "7:33 pm", "8:35 pm", "FAST"),
     ("95197", "7:47 pm", "8:49 pm", "FAST"),
     ("95199", "7:51 pm", "8:53 pm", "FAST"),
@@ -531,6 +547,8 @@ _CR_CST_TO_KALYAN_RAW = [
 
 # ── Panvel → CST ─────────────────────────────────────────────────
 _HR_PANVEL_TO_CST_RAW = [
+    ("98016", "5:50 am", "7:07 am", "SLOW"),
+    ("98028", "6:57 am", "8:14 am", "SLOW"),
     ("21002", "4:00 am", "5:17 am", "SLOW"),
     ("21004", "4:26 am", "5:43 am", "SLOW"),
     ("21006", "4:59 am", "6:16 am", "SLOW"),
@@ -741,14 +759,33 @@ WR_STATIONS_CUMUL = [
 ]
 
 CR_STATIONS_CUMUL = [
-    ("Kalyan", 0), ("Dombivli", 8), ("Thane", 18), ("Mulund", 24),
-    ("Bhandup", 28), ("Vikhroli", 32), ("Ghatkopar", 36), ("Vidyavihar", 40),
+    ("Kalyan", 0), ("Thakurli", 4), ("Dombivli", 8), ("Kopar", 11),
+    ("Diva", 13), ("Mumbra", 15), ("Kalva", 17), ("Thane", 18),
+    ("Mulund", 24), ("Nahur", 26), ("Bhandup", 28), ("Kanjurmarg", 30),
+    ("Vikhroli", 32), ("Ghatkopar", 36), ("Vidyavihar", 40),
     ("Kurla", 44), ("Sion", 48), ("Matunga", 52), ("Dadar", 56),
+    ("Parel", 58), ("Currey Road", 59), ("Chinchpokli", 60),
     ("Byculla", 62), ("Sandhurst Road", 66), ("Masjid", 70), ("CST", 74),
 ]
 
+# Harbour Line — East branch: CST ↔ Panvel via Vashi
 HR_STATIONS_CUMUL = [
-    ("Panvel", 0), ("Vashi", 22), ("Belapur", 32), ("Kurla", 56), ("CST", 77),
+    ("Panvel", 0), ("Khandeshwar", 5), ("Mansarovar", 8), ("Kharghar", 11),
+    ("Belapur", 15), ("Seawood", 19), ("Nerul", 22), ("Juinagar", 25),
+    ("Sanpada", 28), ("Vashi", 30), ("Mankhurd", 38), ("Govandi", 41),
+    ("Chembur", 43), ("Tilaknagar", 46), ("Kurla", 49), ("Chunabhatti", 52),
+    ("GTB Nagar", 55), ("Vadala Road", 60), ("Sewri", 63), ("Cotton Green", 66),
+    ("Reay Road", 68), ("Dockyard Road", 71), ("Sandhurst Road", 73),
+    ("Masjid", 75), ("CST", 78),
+]
+
+# Harbour Line — West branch: CST ↔ Goregaon via Bandra
+HRW_STATIONS_CUMUL = [
+    ("Goregaon", 0), ("Ramnagar", 4), ("Jogeshwari", 7), ("Andheri", 11),
+    ("Vile Parle", 15), ("Santacruz", 18), ("Khar Road", 21), ("Bandra", 25),
+    ("Mahim", 28), ("Kings Circle", 31), ("Vadala Road", 37), ("Sewri", 40),
+    ("Cotton Green", 43), ("Reay Road", 45), ("Dockyard Road", 48),
+    ("Sandhurst Road", 50), ("Masjid", 52), ("CST", 55),
 ]
 
 # ── Which stations each train type stops at ──────────────────────
@@ -774,24 +811,28 @@ _CR_SEMI_FAST_STOPS = _CR_FAST_STOPS | {
 }
 
 _HR_ALL = [s for s, _ in HR_STATIONS_CUMUL]
+_HRW_ALL = [s for s, _ in HRW_STATIONS_CUMUL]
 # HR is all slow — every train stops everywhere
 
 _STOP_SETS = {
     "WR": {"FAST": _WR_FAST_STOPS, "SEMI_FAST": _WR_SEMI_FAST_STOPS, "AC": _WR_FAST_STOPS},
     "CR": {"FAST": _CR_FAST_STOPS, "SEMI_FAST": _CR_SEMI_FAST_STOPS, "AC": _CR_FAST_STOPS},
     "HR": {},
+    "HRW": {},
 }
 
 _CUMUL_MAPS = {
     "WR": {s: m for s, m in WR_STATIONS_CUMUL},
     "CR": {s: m for s, m in CR_STATIONS_CUMUL},
     "HR": {s: m for s, m in HR_STATIONS_CUMUL},
+    "HRW": {s: m for s, m in HRW_STATIONS_CUMUL},
 }
 
 _STATION_ORDERS = {
     "WR": _WR_ALL,
     "CR": _CR_ALL,
     "HR": _HR_ALL,
+    "HRW": _HRW_ALL,
 }
 
 
@@ -907,11 +948,12 @@ def _build_line(raw_data, line, origin, dest):
 
 def generate_timetable() -> list:
     """
-    Returns full Mumbai local timetable — LLM-sourced data covering 16 routes.
+    Returns full Mumbai local timetable — real scraped data from trainhelp.in.
     Each train dict has keys:
         number, name, type, train_type, line, origin, dest,
         depart, arrive, duration, stops
     stops = {"StationA": "HH:MM", "StationB": "HH:MM", ...}
+    Uses real per-station stops when available, falls back to _compute_stops().
     """
     import json
     from pathlib import Path
@@ -925,8 +967,25 @@ def generate_timetable() -> list:
         line = route["line"]
         origin = route["origin"]
         dest = route["destination"]
-        raw = [(t["n"], t["d"], t["a"], t["t"]) for t in route["trains"]]
-        all_trains += _build_line(raw, line, origin, dest)
+        for t in route["trains"]:
+            train = _make_train(
+                number=t["n"],
+                name=f"{dest} {'Fast' if t['t'] == 'FAST' else 'SF' if t['t'] == 'SEMI FAST' else 'AC' if t['t'] == 'AC LOCAL' else 'Slow'}",
+                typ=_TYPE_MAP.get(t["t"], "SLOW"),
+                train_type=t["t"],
+                line=line,
+                origin=origin,
+                dest=dest,
+                dep=t["d"],
+                arr=t["a"],
+            )
+            if t.get("stops"):
+                # Use real per-station stops from scraped data
+                train["stops"] = t["stops"]
+            else:
+                # Fall back to computed stops for routes without real data
+                train["stops"] = _compute_stops(train)
+            all_trains.append(train)
 
     # Sort by line then departure
     all_trains.sort(key=lambda t: (t["line"], t["depart"]))

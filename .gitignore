@@ -47,3 +47,7 @@ neo4j/logs/
 # Milvus
 milvus_data/
 backend/logs/
+
+# Scraper intermediate files
+backend/data/trainhelp_dumps/
+backend/data/scraped_timetable.json

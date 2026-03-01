@@ -1,4 +1,9 @@
-# LLM-generated Mumbai local train timetable — 1732 trains
+# DEPRECATED: This file is no longer imported by any code.
+# The actual timetable data is in llm_timetable_raw.json, read by mumbai_timetable.py.
+# Data below was LLM-generated and has been superseded by real scraped data.
+# Kept for reference only.
+#
+# Original: LLM-generated Mumbai local train timetable — 1732 trains
 # Routes: 16
 
 _RAW_WR_VIRAR_TO_CHURCHGATE = [

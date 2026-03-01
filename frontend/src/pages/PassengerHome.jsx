@@ -461,7 +461,7 @@ export default function PassengerHome() {
             <p className="text-blue-300 text-[10px] mt-0.5">Mumbai Local · Powered by RailFlow</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-blue-200 text-[10px] hidden sm:block">{user?.name}</span>
+            <span className="text-blue-200 text-[10px]">{user?.name}</span>
             <button onClick={handleLogout}
               className="text-[10px] bg-blue-600/60 hover:bg-blue-600 text-blue-200 px-2.5 py-1 rounded-lg transition-colors font-medium">
               Logout
@@ -577,7 +577,13 @@ export default function PassengerHome() {
                   </div>
                 </div>
 
-                {results.trains?.length > 0 ? (
+                {results.error ? (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+                    <div className="text-3xl mb-2">⚠️</div>
+                    <p className="text-sm font-semibold text-red-700">Backend Offline</p>
+                    <p className="text-xs text-red-600 mt-1">{results.error}</p>
+                  </div>
+                ) : results.trains?.length > 0 ? (
                   <div className="space-y-2.5">
                     {results.trains.map((train, i) => (
                       <TrainCard key={train.train_number} train={train} isRecommended={i === 0}
@@ -830,55 +836,4 @@ export default function PassengerHome() {
       `}</style>
     </div>
   )
-}
-
-// ── MOCK DATA (fallback when backend offline) ────────────────────
-function getMockResults(origin, destination) {
-  const isWR = ["Virar","Borivali","Andheri","Goregaon","Malad","Bandra","Churchgate"].some(s =>
-    origin.includes(s) || destination.includes(s)
-  )
-  return {
-    origin, destination, day_type: "weekday", total_route_reports: 47,
-    trains: [
-      {
-        train_number: "90011", train_name: "Borivali Fast", train_type: "FAST",
-        erail_type: "FAST", line: isWR ? "WR" : "CR", origin, destination,
-        depart: "08:12", arrive: "08:57", duration: "45m", platform: 3,
-        badge: "GREEN", badge_label: "Safe", badge_color: "#22C55E", badge_score: 28,
-        reason: "Usually comfortable at this hour — 31 of 37 past reports say spacious.",
-        report_count: 37,
-        signals: {
-          historical: { score: 22, total: 37, description: "Usually comfortable — 84% of 37 reports say spacious", confidence: "high" },
-          crowd_trend: { score: 10, trend: "improving", description: "Less crowded lately — only 12% packed vs 22% usual" },
-          weather: { condition: "clear", score: 0, description: "Clear — no weather impact" }
-        }
-      },
-      {
-        train_number: "90270", train_name: "Virar Fast", train_type: "FAST",
-        erail_type: "FAST", line: isWR ? "WR" : "CR", origin, destination,
-        depart: "08:09", arrive: "09:37", duration: "1h 28m", platform: 1,
-        badge: "RED", badge_label: "Avoid", badge_color: "#EF4444", badge_score: 87,
-        reason: "Monday surge + 14-min gap before this train — absorbs previous crowd.",
-        report_count: 52,
-        signals: {
-          historical: { score: 92, total: 52, description: "Historically very crowded — 71% of 52 reports say packed", confidence: "high" },
-          crowd_trend: { score: 85, trend: "spiking", description: "Crowd surge detected — 82% packed this week vs 61% average" },
-          weather: { condition: "clear", score: 0, description: "Clear — no weather impact" }
-        }
-      },
-      {
-        train_number: "90284", train_name: "Virar Fast", train_type: "FAST",
-        erail_type: "FAST", line: isWR ? "WR" : "CR", origin, destination,
-        depart: "08:24", arrive: "09:49", duration: "1h 25m", platform: 2,
-        badge: "YELLOW", badge_label: "Caution", badge_color: "#F59E0B", badge_score: 55,
-        reason: "Moderate on this slot — crowd normalises slightly after 8:10.",
-        report_count: 28,
-        signals: {
-          historical: { score: 58, total: 28, description: "Moderately crowded based on 28 past reports", confidence: "medium" },
-          crowd_trend: { score: 30, trend: "stable", description: "Normal pattern — 8 reports this week match baseline" },
-          weather: { condition: "clear", score: 0, description: "Clear — no weather impact" }
-        }
-      },
-    ]
-  }
 }
