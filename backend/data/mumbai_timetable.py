@@ -891,7 +891,7 @@ def _build_line(raw_data, line, origin, dest):
     for num, dep, arr, type_display in raw_data:
         train = _make_train(
             number=num,
-            name=f"{origin} {'Fast' if type_display == 'FAST' else 'SF' if type_display == 'SEMI FAST' else 'AC' if type_display == 'AC LOCAL' else 'Slow'}",
+            name=f"{dest} {'Fast' if type_display == 'FAST' else 'SF' if type_display == 'SEMI FAST' else 'AC' if type_display == 'AC LOCAL' else 'Slow'}",
             typ=_TYPE_MAP.get(type_display, "SLOW"),
             train_type=type_display,
             line=line,
@@ -907,25 +907,26 @@ def _build_line(raw_data, line, origin, dest):
 
 def generate_timetable() -> list:
     """
-    Returns full Mumbai local timetable — real data from Indian Railways.
+    Returns full Mumbai local timetable — LLM-sourced data covering 16 routes.
     Each train dict has keys:
         number, name, type, train_type, line, origin, dest,
         depart, arrive, duration, stops
     stops = {"StationA": "HH:MM", "StationB": "HH:MM", ...}
     """
+    import json
+    from pathlib import Path
+
+    json_path = Path(__file__).parent / "llm_timetable_raw.json"
+    with open(json_path) as f:
+        data = json.load(f)
+
     all_trains = []
-
-    # Western Railway
-    all_trains += _build_line(_WR_VIRAR_TO_CCG_RAW, "WR", "Virar", "Churchgate")
-    all_trains += _build_line(_WR_CCG_TO_VIRAR_RAW, "WR", "Churchgate", "Virar")
-
-    # Central Railway
-    all_trains += _build_line(_CR_KALYAN_TO_CST_RAW, "CR", "Kalyan", "CST")
-    all_trains += _build_line(_CR_CST_TO_KALYAN_RAW, "CR", "CST", "Kalyan")
-
-    # Harbour Line
-    all_trains += _build_line(_HR_PANVEL_TO_CST_RAW, "HR", "Panvel", "CST")
-    all_trains += _build_line(_HR_CST_TO_PANVEL_RAW, "HR", "CST", "Panvel")
+    for _key, route in data.items():
+        line = route["line"]
+        origin = route["origin"]
+        dest = route["destination"]
+        raw = [(t["n"], t["d"], t["a"], t["t"]) for t in route["trains"]]
+        all_trains += _build_line(raw, line, origin, dest)
 
     # Sort by line then departure
     all_trains.sort(key=lambda t: (t["line"], t["depart"]))

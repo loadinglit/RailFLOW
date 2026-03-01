@@ -2,9 +2,9 @@
 RailFlow — Neo4j Seed Script
 Generates a comprehensive Mumbai local train timetable + 5000 crowd reports.
 
-Timetable: ~500 trains across WR/CR/HR, 4am to midnight, realistic frequency.
-Uses static deterministic timetable from mumbai_timetable.py (real durations/types).
-Reports: 5000 over 3 months (Dec 2025 → Feb 2026) with peak-hour weighting.
+Timetable: ~1700 trains across WR/CR/HR, 4am to midnight, realistic frequency.
+Uses LLM-sourced timetable from mumbai_timetable.py (real durations/types).
+Reports: 10000 over 3 months (Dec 2025 → Feb 2026) with peak-hour weighting.
 
 Run: cd RailFLOW && uv run python backend/scripts/seed_crowd_data.py
 """
@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from app.core import run_cypher, get_neo4j_driver
-from backend.data.mumbai_timetable import generate_timetable
+from data.mumbai_timetable import generate_timetable
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -107,16 +107,19 @@ _COMMUTER_HASHES = [
 def get_crowd_distribution(train, day_type, hour):
     """
     Returns RED/YELLOW/GREEN distribution based on real Mumbai patterns.
-    Uses train name, type, line, direction, day, and hour.
+    Uses train origin, destination, type, line, direction, day, and hour.
     """
-    t = train["name"]
+    origin = train["origin"]
+    dest = train["dest"]
     line = train["line"]
+    typ = train["type"]
     h = int(hour.split(":")[0]) if isinstance(hour, str) else hour
-    is_southbound = train["dest"] in ("Churchgate", "CST")
-    is_fast = train["type"] in ("FAST", "SEMI_FAST")
+    is_southbound = dest in ("Churchgate", "CST")
+    is_fast = typ in ("FAST", "SEMI_FAST")
+    is_slow = typ == "SLOW"
 
     # AC LOCAL trains are always less crowded (premium fare)
-    if train["type"] == "AC":
+    if typ == "AC":
         if day_type == "weekday" and (7 <= h <= 9 or 17 <= h <= 19):
             return {"RED": 5, "YELLOW": 30, "GREEN": 65}
         return {"RED": 2, "YELLOW": 15, "GREEN": 83}
@@ -124,7 +127,7 @@ def get_crowd_distribution(train, day_type, hour):
     # ── Western Railway ──
     if line == "WR":
         if is_southbound:
-            if "Virar" in t and is_fast:
+            if origin == "Virar" and is_fast:
                 if day_type == "weekday":
                     if 7 <= h <= 9:     return {"RED": 72, "YELLOW": 22, "GREEN": 6}
                     if h == 6:          return {"RED": 48, "YELLOW": 38, "GREEN": 14}
@@ -136,7 +139,7 @@ def get_crowd_distribution(train, day_type, hour):
                     return {"RED": 12, "YELLOW": 35, "GREEN": 53}
                 return {"RED": 5, "YELLOW": 20, "GREEN": 75}
 
-            if "Borivali" in t and is_fast:
+            if origin == "Borivali" and is_fast:
                 if day_type == "weekday":
                     if 7 <= h <= 9:     return {"RED": 55, "YELLOW": 32, "GREEN": 13}
                     if h == 6:          return {"RED": 30, "YELLOW": 45, "GREEN": 25}
@@ -145,13 +148,19 @@ def get_crowd_distribution(train, day_type, hour):
                     return {"RED": 22, "YELLOW": 48, "GREEN": 30}
                 return {"RED": 5, "YELLOW": 18, "GREEN": 77}
 
-            if "Slow" in t:
+            # Andheri origin or any slow train heading south
+            if is_slow:
                 if day_type == "weekday" and 7 <= h <= 9:
                     return {"RED": 32, "YELLOW": 45, "GREEN": 23}
                 return {"RED": 8, "YELLOW": 28, "GREEN": 64}
 
+            # Semi-fast southbound (catch-all for WR southbound semi-fast)
+            if day_type == "weekday" and 7 <= h <= 9:
+                return {"RED": 50, "YELLOW": 35, "GREEN": 15}
+            return {"RED": 10, "YELLOW": 33, "GREEN": 57}
+
         else:  # northbound (Churchgate → outskirts)
-            if "Virar" in t and is_fast:
+            if dest == "Virar" and is_fast:
                 if day_type == "weekday":
                     if 17 <= h <= 19:   return {"RED": 68, "YELLOW": 24, "GREEN": 8}
                     if h == 20:         return {"RED": 40, "YELLOW": 38, "GREEN": 22}
@@ -160,22 +169,27 @@ def get_crowd_distribution(train, day_type, hour):
                     return {"RED": 32, "YELLOW": 43, "GREEN": 25}
                 return {"RED": 5, "YELLOW": 22, "GREEN": 73}
 
-            if "Borivali" in t:
+            if dest == "Borivali":
                 if day_type == "weekday":
                     if 17 <= h <= 19:   return {"RED": 50, "YELLOW": 35, "GREEN": 15}
                     if h == 20:         return {"RED": 25, "YELLOW": 40, "GREEN": 35}
                     return {"RED": 8, "YELLOW": 28, "GREEN": 64}
                 return {"RED": 5, "YELLOW": 25, "GREEN": 70}
 
-            if "Slow" in t:
+            # Andheri destination or any slow northbound
+            if is_slow:
                 if day_type == "weekday" and 17 <= h <= 19:
                     return {"RED": 35, "YELLOW": 42, "GREEN": 23}
                 return {"RED": 6, "YELLOW": 24, "GREEN": 70}
 
+            if day_type == "weekday" and 17 <= h <= 19:
+                return {"RED": 45, "YELLOW": 38, "GREEN": 17}
+            return {"RED": 8, "YELLOW": 28, "GREEN": 64}
+
     # ── Central Railway ──
     if line == "CR":
         if is_southbound:
-            if ("Kalyan" in t or "Kasara" in t) and is_fast:
+            if origin in ("Kalyan", "Kasara") and is_fast:
                 if day_type == "weekday":
                     if 7 <= h <= 9:     return {"RED": 65, "YELLOW": 27, "GREEN": 8}
                     if h == 6:          return {"RED": 35, "YELLOW": 42, "GREEN": 23}
@@ -185,25 +199,36 @@ def get_crowd_distribution(train, day_type, hour):
                     return {"RED": 28, "YELLOW": 47, "GREEN": 25}
                 return {"RED": 5, "YELLOW": 22, "GREEN": 73}
 
-            if "Thane" in t and is_fast:
+            if origin == "Thane" and is_fast:
                 if day_type == "weekday" and 7 <= h <= 9:
                     return {"RED": 45, "YELLOW": 38, "GREEN": 17}
                 return {"RED": 8, "YELLOW": 30, "GREEN": 62}
 
-            if "Dombivli" in t:
+            if origin == "Dombivli":
                 if day_type == "weekday" and 7 <= h <= 10:
                     return {"RED": 40, "YELLOW": 40, "GREEN": 20}
                 return {"RED": 10, "YELLOW": 32, "GREEN": 58}
 
-            if "Slow" in t:
+            if is_slow:
                 if day_type == "weekday" and 7 <= h <= 9:
                     return {"RED": 30, "YELLOW": 45, "GREEN": 25}
                 return {"RED": 8, "YELLOW": 28, "GREEN": 64}
 
-            if "Kurla" in t:
-                return {"RED": 18, "YELLOW": 42, "GREEN": 40}
+            # Semi-fast southbound CR
+            if day_type == "weekday" and 7 <= h <= 9:
+                return {"RED": 45, "YELLOW": 38, "GREEN": 17}
+            return {"RED": 10, "YELLOW": 32, "GREEN": 58}
 
         else:  # northbound (CST → outskirts)
+            if dest in ("Kalyan", "Kasara") and is_fast:
+                if day_type == "weekday":
+                    if 17 <= h <= 19:   return {"RED": 62, "YELLOW": 28, "GREEN": 10}
+                    if h == 20:         return {"RED": 35, "YELLOW": 40, "GREEN": 25}
+                    return {"RED": 8, "YELLOW": 28, "GREEN": 64}
+                if day_type == "saturday" and 17 <= h <= 19:
+                    return {"RED": 25, "YELLOW": 42, "GREEN": 33}
+                return {"RED": 5, "YELLOW": 22, "GREEN": 73}
+
             if day_type == "weekday":
                 if 17 <= h <= 19:   return {"RED": 58, "YELLOW": 30, "GREEN": 12}
                 if h == 20:         return {"RED": 32, "YELLOW": 40, "GREEN": 28}
@@ -302,7 +327,7 @@ def generate_reports(all_trains, n=5000):
         # TREND SPIKE: Last week of Feb, WR Virar trains get extra RED
         if (report_date >= datetime(2026, 2, 22)
             and train["line"] == "WR"
-            and "Virar" in train["name"]
+            and (train["origin"] == "Virar" or train["dest"] == "Virar")
             and day_type == "weekday"):
             dist = {
                 "RED": min(92, dist["RED"] + 20),
@@ -345,8 +370,8 @@ def ingest_all():
     hr_count = sum(1 for t in all_trains if t["line"] == "HR")
     print(f"  WR: {wr_count} | CR: {cr_count} | HR: {hr_count} | Total: {len(all_trains)}")
 
-    print("\nGenerating 5000 crowd reports...")
-    reports = generate_reports(all_trains, 5000)
+    print("\nGenerating 10000 crowd reports...")
+    reports = generate_reports(all_trains, 10000)
 
     print("\nClearing old data...")
     run_cypher("MATCH (n) DETACH DELETE n")
@@ -459,10 +484,11 @@ def ingest_all():
         ORDER BY t.line
     """)
 
-    # Sample: show what Virar Fast 8am weekday looks like
+    # Sample: show what Virar origin/dest 8am weekday looks like
     virar_sample = run_cypher("""
         MATCH (cr:CrowdReport)
-        WHERE cr.train_name CONTAINS 'Virar' AND cr.day_type = 'weekday'
+        WHERE (cr.origin = 'Virar' OR cr.destination = 'Virar')
+              AND cr.day_type = 'weekday'
               AND cr.hour_bucket STARTS WITH '08'
         RETURN cr.crowd_level AS level, count(*) AS total
         ORDER BY total DESC

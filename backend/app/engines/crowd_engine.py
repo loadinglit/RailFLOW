@@ -405,56 +405,10 @@ def _station_index(name: str, stations: list) -> int:
     return stations.index(t) if t in stations else -1
 
 
-async def get_trains_for_route(origin: str, destination: str, dt: datetime) -> list:
+def get_trains_for_route(origin: str, destination: str, dt: datetime) -> list:
     """
     Returns up to 10 trains for the route, filtered by time window.
-    Priority: erail.in API (real-time) → static timetable (real data, per-station stops).
-    """
-    from app.services.erail import fetch_trains_from_erail
-
-    # ── Try erail.in API first (when API key is available) ────────
-    erail_trains = await fetch_trains_from_erail(origin, destination)
-    if erail_trains:
-        return _filter_by_time(erail_trains, dt, limit=10)
-
-    # ── Static timetable with per-station departure times ─────────
-    return _get_trains_from_timetable(origin, destination, dt)
-
-
-def _filter_by_time(trains: list, dt: datetime, limit: int = 10) -> list:
-    """Filter erail trains to the forward time window: 5 min before → 3 hours after."""
-    from_dt = dt - timedelta(minutes=5)
-    until_dt = dt + timedelta(hours=3)
-    search_from = f"{from_dt.hour:02d}:{from_dt.minute:02d}"
-    search_until = f"{until_dt.hour:02d}:{until_dt.minute:02d}"
-    wraps_midnight = until_dt.day != dt.day
-
-    filtered = []
-    for t in trains:
-        dep = t.get("depart", "")
-        if not dep:
-            continue
-        if wraps_midnight:
-            if dep >= search_from or dep <= search_until:
-                filtered.append(t)
-        else:
-            if search_from <= dep <= search_until:
-                filtered.append(t)
-        if len(filtered) >= limit:
-            break
-
-    if wraps_midnight:
-        filtered.sort(key=lambda x: (0 if x.get("depart", "") >= search_from else 1, x.get("depart", "")))
-    else:
-        filtered.sort(key=lambda x: x.get("depart", ""))
-
-    return filtered
-
-
-def _get_trains_from_timetable(origin: str, destination: str, dt: datetime) -> list:
-    """
-    Search static timetable with per-station departure times.
-    Returns trains with depart/arrive times specific to the user's stations.
+    Uses static timetable with per-station departure times.
     """
     from data.mumbai_timetable import search_trains
 

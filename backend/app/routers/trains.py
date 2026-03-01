@@ -63,8 +63,8 @@ async def search_trains(req: SearchRequest):
 
     day_type = get_day_type(dt)
 
-    # Fetch trains (erail.in API first, Neo4j fallback)
-    trains = await get_trains_for_route(req.origin, req.destination, dt)
+    # Fetch trains from static timetable
+    trains = get_trains_for_route(req.origin, req.destination, dt)
     if not trains:
         return {"trains": [], "message": "No trains found for this route"}
 

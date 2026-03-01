@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RailFLOW</string>
+    <string name="title_activity_main">RailFLOW</string>
+    <string name="package_name">com.scogo.railflow</string>
+    <string name="custom_url_scheme">com.scogo.railflow</string>
+</resources>
