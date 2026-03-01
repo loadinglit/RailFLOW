@@ -27,21 +27,29 @@ def get_neo4j_driver():
     """Get or create a Neo4j driver."""
     global _neo4j_driver
     if _neo4j_driver is None:
-        from neo4j import GraphDatabase
-        uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-        user = os.getenv("NEO4J_USER", "neo4j")
-        password = os.getenv("NEO4J_PASSWORD", "password")
-        _neo4j_driver = GraphDatabase.driver(uri, auth=(user, password))
-        print("[core] Neo4j connected")
+        try:
+            from neo4j import GraphDatabase
+            uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+            user = os.getenv("NEO4J_USER", "neo4j")
+            password = os.getenv("NEO4J_PASSWORD", "password")
+            _neo4j_driver = GraphDatabase.driver(uri, auth=(user, password))
+            print("[core] Neo4j connected")
+        except Exception as e:
+            print(f"[core] Neo4j connection FAILED: {e}")
+            raise
     return _neo4j_driver
 
 
 def run_cypher(query: str, params: dict = None) -> list[dict]:
     """Execute a Cypher query and return results as list of dicts."""
-    driver = get_neo4j_driver()
-    with driver.session() as session:
-        result = session.run(query, params or {})
-        return [dict(record) for record in result]
+    try:
+        driver = get_neo4j_driver()
+        with driver.session() as session:
+            result = session.run(query, params or {})
+            return [dict(record) for record in result]
+    except Exception as e:
+        print(f"[core] Neo4j query FAILED: {e}")
+        return []
 
 
 # ── Milvus / Zilliz Connection (Vector Store for RAG) ──────────

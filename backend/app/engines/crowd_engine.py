@@ -246,9 +246,9 @@ async def get_weather_score(city: str = "Mumbai") -> dict:
 
 # ── Badge Computation ────────────────────────────────────────────
 
-def compute_final_badge(hist_score: int, delay_score: int, weather_score: int) -> dict:
+def compute_final_badge(hist_score: int, trend_score: int, weather_score: int) -> dict:
     """Combines three signals into final badge."""
-    final = (hist_score * 0.50) + (delay_score * 0.30) + (weather_score * 0.20)
+    final = (hist_score * 0.50) + (trend_score * 0.30) + (weather_score * 0.20)
     final = round(final)
 
     if final >= 70:

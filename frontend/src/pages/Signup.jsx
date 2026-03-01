@@ -148,15 +148,16 @@ export default function Signup() {
               </div>
             </div>
 
-            {/* Contact — passengers only */}
+            {/* Contact — passengers only (required for FIR filing) */}
             {form.role === 'passenger' && (
               <div className="border-t border-gray-100 pt-3">
-                <p className="text-[10px] text-gray-400 mb-2.5 pl-1">Contact details (used in complaint / FIR filing)</p>
+                <p className="text-[10px] text-gray-400 mb-2.5 pl-1">Contact details (required for complaint / FIR filing)</p>
                 <div className="space-y-2.5">
                   <input
                     type="tel"
                     value={form.phone}
                     onChange={set('phone')}
+                    required
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     placeholder="Phone number (e.g. 9876543210)"
                   />
@@ -164,6 +165,7 @@ export default function Signup() {
                     type="text"
                     value={form.address}
                     onChange={set('address')}
+                    required
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     placeholder="Home address (for FIR / complaint)"
                   />

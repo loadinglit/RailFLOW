@@ -100,6 +100,7 @@ export default function PoliceDashboard() {
     }
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchComplaints() }, [statusFilter, typeFilter])
 
   const updateStatus = async (ref, status, note = '') => {
