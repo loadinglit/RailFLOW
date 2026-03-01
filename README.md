@@ -18,7 +18,7 @@ RailFLOW is a three-pillar safety intelligence system for Mumbai's 75 lakh daily
 
 ## Architecture
 
-![Jan Suraksha Agent Architecture](screenshots/agent-design.png)
+![Jan Suraksha Agent Architecture](backend/dev/screenshots/agent-design.png)
 
 **Three-layer system:**
 
@@ -50,7 +50,7 @@ RailFLOW is a three-pillar safety intelligence system for Mumbai's 75 lakh daily
 
 ### Train Search with Crowd Intelligence
 
-![Train Search](screenshots/train-search.png)
+![Train Search](backend/dev/screenshots/train-search.png)
 
 Passenger searches for trains from Churchgate → Virar. The system shows:
 - **Safety Alert card** — AI-generated advisory based on last 24 hours of filed complaints ("9 theft reports... especially around Andheri during 9 AM to 11 AM")
@@ -60,7 +60,7 @@ Passenger searches for trains from Churchgate → Virar. The system shows:
 
 ### Train Results with Crowd Badges
 
-![Train Results](screenshots/train-results.png)
+![Train Results](backend/dev/screenshots/train-results.png)
 
 Each train card displays:
 - **Line badge** (WR/CR/HR) and train type (FAST/SLOW/SEMI FAST)
@@ -72,7 +72,7 @@ Each train card displays:
 
 ### Jan Suraksha Bot — Incident Report
 
-![Jan Suraksha Chat](screenshots/bot-chat.png)
+![Jan Suraksha Chat](backend/dev/screenshots/bot-chat.png)
 
 User reports a robbery in English. The bot:
 - Detects incident: **robbery** with auto-extracted entities (8:15 AM, Virar fast local, Andheri station, phone + wallet, man in black jacket)
@@ -82,7 +82,7 @@ User reports a robbery in English. The bot:
 
 ### Jan Suraksha Bot — Complaint Filed
 
-![Complaint Filed](screenshots/bot-complaint-filed.png)
+![Complaint Filed](backend/dev/screenshots/bot-complaint-filed.png)
 
 After user picks "Get complaint letter ready":
 - Shows **summary**: Railway police number (022-22694727), tracking ref (RM-20260301-B6F6BC), follow-up date (31/03/2026)
@@ -93,7 +93,7 @@ After user picks "Get complaint letter ready":
 
 ### Jan Suraksha Bot — GRP FIR Template
 
-![FIR Template](screenshots/bot-fir-template.png)
+![FIR Template](backend/dev/screenshots/bot-fir-template.png)
 
 The actual **FORM - IF1 (Integrated Form)** under Section 154 Cr.P.C. / Section 173 BNSS:
 - Pre-filled with: District (Mumbai), P.S. (GRP Andheri), Year (2026), Date (01/03/2026)
@@ -103,7 +103,7 @@ The actual **FORM - IF1 (Integrated Form)** under Section 154 Cr.P.C. / Section 
 
 ### Police Dashboard — Tickets
 
-![Police Dashboard](screenshots/police-tickets.png)
+![Police Dashboard](backend/dev/screenshots/police-tickets.png)
 
 Police officer view showing:
 - **4 status counters**: 10 Filed, 1 Active, 4 Solved, 3 Closed
@@ -121,7 +121,7 @@ Police officer view showing:
 
 ### Police Dashboard — Analytics
 
-![Police Analytics](screenshots/police-analytics.png)
+![Police Analytics](backend/dev/screenshots/police-analytics.png)
 
 AI-powered analytics computed from all filed complaints:
 - **Top stats**: 20 Total, +20 This Week (trend), Top Crime: Theft
@@ -133,7 +133,7 @@ AI-powered analytics computed from all filed complaints:
 
 ### Email Notification
 
-![Email Notification](screenshots/email-notification.png)
+![Email Notification](backend/dev/screenshots/email-notification.png)
 
 When police acknowledges a complaint:
 - Passenger receives email: "Complaint RM-20260301-67FE25 — Received & Under Investigation"
@@ -142,7 +142,7 @@ When police acknowledges a complaint:
 
 ### Neo4j Graph Database
 
-![Neo4j Graph](screenshots/neo4j-graph.png)
+![Neo4j Graph](backend/dev/screenshots/neo4j-graph.png)
 
 Neo4j AuraDB browser showing the full graph:
 - **11,207 nodes**: Complaint, CrowdReport, CrowdSignal, DetectionEvent, DisruptionEvent, Route, Station, Train, User
