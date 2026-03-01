@@ -109,38 +109,27 @@ def _parse_choice(message: str, actions: list[dict]) -> str | None:
 
 def _has_enough_details(state: dict) -> bool:
     """
-    Check if ALL FIR template fields are filled.
-    Only returns True when every conversational field is present.
-    All location/travel fields come from LLM extraction.
-    Profile only provides: name, phone, address.
+    Check if we have enough details to proceed with filing.
+
+    RULES:
+    - After 2+ human messages → ALWAYS return True (stop asking, use what we have)
+    - On 1st message → need basic anchors: when + where + what happened
+    - train_name, travel_class, accused_description are NICE-TO-HAVE, never block
     """
+    # Count human messages — after user has responded once to follow-up, STOP asking
+    human_count = sum(1 for m in state.get("messages", []) if isinstance(m, HumanMessage))
+    if human_count >= 2:
+        return True
+
+    # First message only — check bare minimum anchors
     entities = state.get("entities", {})
-
-    # These fields MUST come from the conversation — no exceptions
-    required = [
-        entities.get("time"),           # When did it happen?
-        entities.get("train_name"),     # Which train? (Virar fast, Thane slow)
-        entities.get("travel_class"),   # General / First Class / Ladies?
-        entities.get("location"),       # Where exactly?
-        entities.get("from_station"),   # Which station / route?
-    ]
-
-    # Incident-specific required fields
     incident_type = state.get("incident_type", "general")
 
-    # Theft/robbery → must know what was lost
-    if incident_type in ("theft", "robbery"):
-        required.append(entities.get("items_lost"))
+    has_when = bool(entities.get("time"))
+    has_where = bool(entities.get("location") or entities.get("from_station"))
+    has_what = bool(entities.get("items_lost")) if incident_type in ("theft", "robbery") else True
 
-    # Any incident with a person involved → must have suspect description
-    if incident_type in ("theft", "robbery", "assault", "sexual_harassment"):
-        required.append(entities.get("accused_description"))
-
-    # Physical incidents → must know about injuries
-    if incident_type in ("assault", "falling", "accident", "platform_gap", "stampede", "robbery"):
-        required.append(entities.get("injuries"))
-
-    return all(required)
+    return has_when and has_where and has_what
 
 
 # ── MANAGER NODE ─────────────────────────────────────────────
@@ -647,6 +636,7 @@ def execute_node(state: BotState) -> dict:
     if action_id in ("file_complaint", "file_cpgrams"):
         try:
             tracking_ref = result.get("cpgrams_ref", "")
+            entities = state.get("entities", {})
             saved = save_complaint(state["user_id"], {
                 "ref": tracking_ref,
                 "incident_type": state.get("incident_type", "general"),
@@ -655,6 +645,8 @@ def execute_node(state: BotState) -> dict:
                 "authority": authority_info.get("primary_authority", ""),
                 "user_message": state.get("original_message", ""),
                 "severity": state.get("severity", "medium"),
+                "from_station": entities.get("from_station", ""),
+                "to_station": entities.get("to_station", ""),
             })
             if saved:
                 result["complaint_saved"] = True

@@ -67,10 +67,14 @@ def init_db():
     conn.commit()
 
     # Safe migration: add new columns to existing DBs
-    for col_def in ["phone TEXT", "address TEXT"]:
-        col_name = col_def.split()[0]
+    for table, col_def in [
+        ("users", "phone TEXT"),
+        ("users", "address TEXT"),
+        ("complaints", "from_station TEXT"),
+        ("complaints", "to_station TEXT"),
+    ]:
         try:
-            conn.execute(f"ALTER TABLE users ADD COLUMN {col_def}")
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {col_def}")
             conn.commit()
         except Exception:
             pass  # Column already exists

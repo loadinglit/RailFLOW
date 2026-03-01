@@ -299,6 +299,7 @@ export default function PassengerHome() {
   const [selectedTrain, setSelectedTrain] = useState(null)
   const [detailTrain, setDetailTrain] = useState(null)
   const [error, setError] = useState("")
+  const [safetyAlert, setSafetyAlert] = useState(null)
 
   // Bot state
   const [language, setLanguage] = useState(user?.language_pref || "en")
@@ -330,19 +331,27 @@ export default function PassengerHome() {
     setLoading(true)
     setResults(null)
     setDetailTrain(null)
+    setSafetyAlert(null)
 
     try {
-      const res = await fetch("/api/trains/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          origin,
-          destination,
-          datetime_str: datetime.length === 16 ? datetime + ":00" : datetime,
+      const [trainRes, alertRes] = await Promise.all([
+        fetch("/api/trains/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            origin,
+            destination,
+            datetime_str: datetime.length === 16 ? datetime + ":00" : datetime,
+          }),
         }),
-      })
-      const data = await res.json()
+        fetch(`/api/safety/alerts?language=${language}`).catch(() => null),
+      ])
+      const data = await trainRes.json()
       setResults(data)
+      if (alertRes && alertRes.ok) {
+        const alertData = await alertRes.json()
+        if (alertData.has_alerts) setSafetyAlert(alertData)
+      }
     } catch {
       setResults(getMockResults(origin, destination))
     } finally {
@@ -496,6 +505,37 @@ export default function PassengerHome() {
         {tab === "trains" && (
           <div>
             {/* Results */}
+            {/* Safety Alert Card */}
+            {safetyAlert && results && !detailTrain && (
+              <div className="px-3 pt-4 pb-0">
+                <div className={`rounded-xl border-2 p-4 ${
+                  safetyAlert.stats?.count >= 5
+                    ? "bg-red-50 border-red-200"
+                    : "bg-amber-50 border-amber-200"
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-base">🛡️</span>
+                    <span className={`text-xs font-bold ${
+                      safetyAlert.stats?.count >= 5 ? "text-red-700" : "text-amber-700"
+                    }`}>Safety Alert</span>
+                  </div>
+                  <p className={`text-sm leading-relaxed ${
+                    safetyAlert.stats?.count >= 5 ? "text-red-800" : "text-amber-800"
+                  }`}>
+                    {safetyAlert.advisory}
+                  </p>
+                  <div className={`mt-2 pt-2 border-t text-[11px] font-medium flex items-center gap-1.5 ${
+                    safetyAlert.stats?.count >= 5
+                      ? "border-red-200 text-red-600"
+                      : "border-amber-200 text-amber-600"
+                  }`}>
+                    <span>📊</span>
+                    <span>{safetyAlert.stats?.details?.join(" · ")} · Peak: {safetyAlert.stats?.peak_window}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {results && !detailTrain && (
               <div className="px-3 pt-4">
                 <div className="flex items-center justify-between mb-3">

@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import init_db
 from app.core import shutdown
-from app.routers import trains, bot, complaints, auth
+from app.routers import trains, bot, complaints, auth, safety
 
 
 @asynccontextmanager
@@ -46,6 +46,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(trains.router, prefix="/api/trains", tags=["Train Search"])
 app.include_router(bot.router, prefix="/api/bot", tags=["Jan Suraksha Bot"])
 app.include_router(complaints.router, prefix="/api/complaints", tags=["Police Dashboard"])
+app.include_router(safety.router, prefix="/api/safety", tags=["Safety Intelligence"])
 
 
 @app.get("/health")
@@ -58,5 +59,6 @@ async def health():
             "trains": "Smart train search with crowd badges (GREEN/YELLOW/RED)",
             "bot": "Jan Suraksha Bot — Legal aid for railway passengers",
             "complaints": "Police Dashboard — Complaint ticket management",
+            "safety": "Safety Intelligence — Complaint-driven alerts + police analytics",
         },
     }

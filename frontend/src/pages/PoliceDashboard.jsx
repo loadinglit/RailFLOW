@@ -82,6 +82,9 @@ export default function PoliceDashboard() {
   const [typeFilter, setTypeFilter] = useState('')
   const [actionLoading, setActionLoading] = useState(null)
   const [modal, setModal] = useState(null)
+  const [view, setView] = useState('tickets')
+  const [analytics, setAnalytics] = useState(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
 
   const fetchComplaints = async () => {
     setLoading(true)
@@ -102,6 +105,23 @@ export default function PoliceDashboard() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchComplaints() }, [statusFilter, typeFilter])
+
+  const fetchAnalytics = async () => {
+    setAnalyticsLoading(true)
+    try {
+      const res = await fetch('/api/safety/analytics')
+      const data = await res.json()
+      setAnalytics(data)
+    } catch {
+      setAnalytics(null)
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (view === 'analytics' && !analytics) fetchAnalytics()
+  }, [view]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateStatus = async (ref, status, note = '') => {
     setActionLoading(ref)
@@ -179,10 +199,193 @@ export default function PoliceDashboard() {
             </div>
           ))}
         </div>
+
+        {/* Tickets / Analytics toggle */}
+        <div className="flex gap-2 mt-3">
+          {[
+            { id: 'tickets', label: 'Tickets' },
+            { id: 'analytics', label: 'Analytics' },
+          ].map(t => (
+            <button key={t.id} onClick={() => setView(t.id)}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${
+                view === t.id
+                  ? 'bg-white text-blue-700'
+                  : 'bg-blue-600/60 text-blue-200 hover:bg-blue-600'
+              }`}>
+              {t.id === 'analytics' ? '📊 ' : '📋 '}{t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* ── FILTERS ── */}
-      <div className="px-3 pt-3 pb-1">
+      {/* ── ANALYTICS VIEW ── */}
+      {view === 'analytics' && (
+        <div className="px-3 pt-3 pb-6">
+          {analyticsLoading && (
+            <div className="text-center text-gray-400 py-12 text-xs">
+              <span className="w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin inline-block mb-2" />
+              <p>Loading analytics...</p>
+            </div>
+          )}
+
+          {!analyticsLoading && analytics && (
+            <div className="space-y-3">
+              {/* Stat cards */}
+              <div className="flex gap-2">
+                <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
+                  <div className="text-2xl font-black text-gray-900">{analytics.total_complaints}</div>
+                  <div className="text-[9px] text-gray-500 font-semibold uppercase mt-0.5">Total</div>
+                </div>
+                <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
+                  <div className={`text-2xl font-black ${analytics.trend === 'up' ? 'text-red-600' : analytics.trend === 'down' ? 'text-emerald-600' : 'text-gray-600'}`}>
+                    {analytics.trend === 'up' ? `+${analytics.this_week - analytics.last_week}` : analytics.trend === 'down' ? `${analytics.this_week - analytics.last_week}` : '0'}
+                  </div>
+                  <div className="text-[9px] text-gray-500 font-semibold uppercase mt-0.5">
+                    {analytics.trend === 'up' ? 'This week' : analytics.trend === 'down' ? 'This week' : 'Stable'}
+                  </div>
+                </div>
+                <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
+                  <div className="text-lg font-black text-gray-900">{INCIDENT_ICONS[analytics.by_type?.[0]?.incident_type] || '📋'}</div>
+                  <div className="text-[9px] text-gray-500 font-semibold uppercase mt-0.5">
+                    {analytics.by_type?.[0]?.incident_type?.replace('_', ' ') || 'N/A'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Complaints by Type — horizontal bar chart */}
+              {analytics.by_type?.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Complaints by Type</p>
+                  <div className="space-y-2">
+                    {analytics.by_type.map(item => {
+                      const maxCount = analytics.by_type[0]?.count || 1
+                      const pct = Math.round((item.count / maxCount) * 100)
+                      return (
+                        <div key={item.incident_type} className="flex items-center gap-2">
+                          <span className="text-sm w-5 text-center">{INCIDENT_ICONS[item.incident_type] || '📋'}</span>
+                          <span className="text-[10px] text-gray-600 font-medium w-20 truncate">{item.incident_type?.replace('_', ' ')}</span>
+                          <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                            <div className="bg-blue-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 w-6 text-right">{item.count}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Severity Breakdown */}
+              {analytics.by_severity?.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Severity Breakdown</p>
+                  <div className="space-y-2">
+                    {analytics.by_severity.map(item => {
+                      const maxCount = Math.max(...analytics.by_severity.map(s => s.count), 1)
+                      const pct = Math.round((item.count / maxCount) * 100)
+                      const barColor = {
+                        critical: 'bg-red-500', high: 'bg-orange-500',
+                        medium: 'bg-amber-400', low: 'bg-blue-400',
+                      }[item.severity] || 'bg-gray-400'
+                      return (
+                        <div key={item.severity} className="flex items-center gap-2">
+                          <span className="text-[10px] text-gray-600 font-medium w-14 capitalize">{item.severity}</span>
+                          <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                            <div className={`${barColor} h-full rounded-full transition-all`} style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 w-6 text-right">{item.count}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Station Hotspots */}
+              {analytics.by_station?.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Station Hotspots</p>
+                  <div className="space-y-2">
+                    {analytics.by_station.slice(0, 6).map(item => {
+                      const maxCount = analytics.by_station[0]?.count || 1
+                      const pct = Math.round((item.count / maxCount) * 100)
+                      return (
+                        <div key={item.from_station} className="flex items-center gap-2">
+                          <span className="text-sm w-5 text-center">📍</span>
+                          <span className="text-[10px] text-gray-600 font-medium w-24 truncate">{item.from_station}</span>
+                          <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                            <div className="bg-rose-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 w-6 text-right">{item.count}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Hourly Pattern */}
+              {analytics.by_hour?.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Hourly Pattern</p>
+                  <div className="flex items-end gap-1 h-24">
+                    {Array.from({ length: 24 }, (_, i) => {
+                      const hourStr = String(i).padStart(2, '0')
+                      const entry = analytics.by_hour.find(h => h.hour === hourStr)
+                      const count = entry?.count || 0
+                      const maxH = Math.max(...analytics.by_hour.map(h => h.count), 1)
+                      const heightPct = count > 0 ? Math.max(10, Math.round((count / maxH) * 100)) : 0
+                      const ampm = i === 0 ? '12a' : i < 12 ? `${i}a` : i === 12 ? '12p' : `${i-12}p`
+                      return (
+                        <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                          {count > 0 && (
+                            <span className="text-[7px] text-gray-500 font-bold mb-0.5">{count}</span>
+                          )}
+                          <div
+                            className={`w-full rounded-t transition-all ${count > 0 ? 'bg-blue-500' : 'bg-gray-100'}`}
+                            style={{ height: count > 0 ? `${heightPct}%` : '4px' }}
+                          />
+                          {(i % 4 === 0) && (
+                            <span className="text-[7px] text-gray-400 mt-1">{ampm}</span>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Patrol Recommendation */}
+              {analytics.patrol_recommendation && (
+                <div className="bg-blue-50 rounded-xl border-2 border-blue-200 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-base">🤖</span>
+                    <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">AI Patrol Recommendation</span>
+                  </div>
+                  <p className="text-sm text-blue-800 leading-relaxed">{analytics.patrol_recommendation}</p>
+                </div>
+              )}
+
+              {/* Refresh */}
+              <button onClick={fetchAnalytics}
+                className="w-full py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                <IconRefresh /> Refresh Analytics
+              </button>
+            </div>
+          )}
+
+          {!analyticsLoading && !analytics && (
+            <div className="text-center text-gray-400 py-12 bg-white rounded-xl shadow-sm">
+              <div className="text-3xl mb-2">📊</div>
+              <p className="text-sm font-medium">Analytics unavailable</p>
+              <p className="text-xs mt-1">File complaints via Jan Suraksha Bot to see data here</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── FILTERS (tickets view) ── */}
+      {view === 'tickets' && <div className="px-3 pt-3 pb-1">
         {/* Status filter chips */}
         <div className="flex gap-1.5 overflow-x-auto pb-2">
           {STATUS_OPTIONS.map(s => (
@@ -210,10 +413,10 @@ export default function PoliceDashboard() {
             <IconRefresh />
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* ── TICKETS ── */}
-      <div className="px-3 pt-2 pb-6 space-y-2.5">
+      {view === 'tickets' && <div className="px-3 pt-2 pb-6 space-y-2.5">
         {loading && (
           <div className="text-center text-gray-400 py-12 text-xs">
             <span className="w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin inline-block mb-2" />
@@ -329,7 +532,7 @@ export default function PoliceDashboard() {
             )}
           </div>
         ))}
-      </div>
+      </div>}
 
       {/* ── MODAL ── */}
       {modal && (

@@ -54,8 +54,9 @@ def save_complaint(user_id: str, complaint_data: dict) -> dict:
     try:
         db.execute("""
             INSERT INTO complaints (ref, user_id, incident_type, severity, status,
-                complaint_text, user_message, authority, date_filed)
-            VALUES (?, ?, ?, ?, 'filed', ?, ?, ?, ?)
+                complaint_text, user_message, authority, date_filed,
+                from_station, to_station)
+            VALUES (?, ?, ?, ?, 'filed', ?, ?, ?, ?, ?, ?)
         """, (
             ref,
             user_id,
@@ -65,6 +66,8 @@ def save_complaint(user_id: str, complaint_data: dict) -> dict:
             complaint_data.get("user_message", ""),
             complaint_data.get("authority", ""),
             complaint_data.get("date_filed", ""),
+            complaint_data.get("from_station", ""),
+            complaint_data.get("to_station", ""),
         ))
         db.commit()
         log.info("Complaint saved: ref=%s", ref)

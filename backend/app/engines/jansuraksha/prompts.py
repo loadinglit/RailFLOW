@@ -153,35 +153,37 @@ CRITICAL RULES:
 - Do NOT list the options — they appear as buttons in the UI"""
 
     elif action_type == "ask_details":
-        # Manager decided the user's message was too vague.
-        # Ask naturally for more context — NO action buttons.
+        # Manager decided user's first message is missing key details.
+        # This runs AT MOST ONCE — after user responds, we proceed regardless.
         known = {k: v for k, v in entities.items() if v}
-        missing = {k: v for k, v in entities.items() if not v}
         known_str = ", ".join(f"{k}: {v}" for k, v in known.items()) if known else "nothing specific yet"
-        missing_keys = ", ".join(missing.keys()) if missing else "none"
 
-        return f"""TASK: Empathize and gather more details about this {incident_type} incident.
+        # Only ask about THESE specific missing fields — nothing else
+        ask_fields = []
+        if not entities.get("time"):
+            ask_fields.append("when this happened (time)")
+        if not entities.get("location") and not entities.get("from_station"):
+            ask_fields.append("where this happened (which station or inside the train)")
+        if incident_type in ("theft", "robbery") and not entities.get("items_lost"):
+            ask_fields.append("what was stolen")
+        ask_str = " and ".join(ask_fields[:2]) if ask_fields else "any other details you remember"
 
-The user described: {state.get('original_message', '')}
+        return f"""TASK: Empathize briefly and ask for missing details about this {incident_type} incident.
+
 User name: {name}
-Details we have: {known_str}
-Details still unknown: {missing_keys}
+Details we already have: {known_str}
+We still need: {ask_str}
 
-You are a caring railway assistant. Based on THIS specific incident type ({incident_type}),
-decide which 2-3 details are MOST important to ask for. Use your judgement — different incidents
-need different details. A theft needs "what was stolen" and "where", a fall needs "are you hurt"
-and "where", harassment needs "can you describe the person" and "when".
+Say EXACTLY:
+1. One short sentence of empathy (acknowledge what happened)
+2. Ask ONLY about: {ask_str}
 
-Say:
-1. One sentence of empathy — acknowledge what happened
-2. Naturally ask for the 2-3 most relevant missing details for THIS incident
-3. Keep it conversational — like a caring friend, not a form
-
-CRITICAL RULES:
-- Do NOT mention any options, buttons, or action choices
-- Do NOT say "pick an option" or "select from below"
-- Do NOT ask for PNR, coach number, or train number
-- Maximum 3-4 sentences"""
+ABSOLUTE RULES:
+- Ask MAXIMUM 2 questions — ONLY the ones listed above in "We still need"
+- Do NOT ask about: witnesses, direction person ran, platform number, nearby staff, phone model, train number, PNR
+- Do NOT invent your own questions — ONLY ask what is listed above
+- Do NOT mention options, buttons, or action choices
+- Maximum 2-3 sentences total"""
 
     elif action_type == "file_complaint":
         return f"""TASK: Summarize the complaint that has been prepared for the user.
