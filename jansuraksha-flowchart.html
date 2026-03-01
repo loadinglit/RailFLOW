@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jan Suraksha Bot — Architecture Flowchart</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #08080f;
+    --surface: #111119;
+    --surface2: #18182a;
+    --border: #1e1e35;
+    --text: #e2e2ef;
+    --muted: #6b6b8a;
+    --blue: #4a9eed;
+    --purple: #8b5cf6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+    --teal: #14b8a6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    padding: 50px 20px 20px;
+  }
+  .header .tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #8b5cf622, #ec489922);
+    border: 1px solid #8b5cf633;
+    border-radius: 20px;
+    padding: 5px 16px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--purple);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .header h1 {
+    font-size: 2.4rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+  .header h1 .gr {
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin-top: 8px;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ── STATS BAR ── */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin: 28px auto;
+    flex-wrap: wrap;
+    padding: 0 20px;
+  }
+  .stat {
+    padding: 14px 24px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 150px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .stat .n { font-size: 1.6rem; font-weight: 900; }
+  .stat .l { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 2px; }
+
+  /* ── DIVIDER ── */
+  hr.div { border: 0; border-top: 1px solid var(--border); margin: 40px auto; max-width: 1000px; }
+
+  /* ── FLOWCHART CONTAINER ── */
+  .flow-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  .flow-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  /* ── SVG DIAGRAM ── */
+  .diagram-svg {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    display: block;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 24px 50px;
+  }
+  .section h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+  }
+
+  /* ── LEGEND GRID ── */
+  .grid3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .grid2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 768px) {
+    .grid3, .grid2 { grid-template-columns: 1fr; }
+  }
+
+  /* ── CARDS ── */
+  .card {
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .card h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .card p { font-size: 0.82rem; color: #888; line-height: 1.7; }
+  .card code { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--amber); background: #1f170d; padding: 2px 8px; border-radius: 4px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .c-blue { background: #0d1a2e; border: 1px solid #1e3a5f55; }
+  .c-blue::before { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+  .c-blue h3 { color: var(--blue); }
+
+  .c-purple { background: #1a1030; border: 1px solid #2d1b6955; }
+  .c-purple::before { background: linear-gradient(90deg, var(--purple), var(--pink)); }
+  .c-purple h3 { color: var(--purple); }
+
+  .c-amber { background: #1f170d; border: 1px solid #4d3d1a55; }
+  .c-amber::before { background: linear-gradient(90deg, var(--amber), #f97316); }
+  .c-amber h3 { color: var(--amber); }
+
+  .c-green { background: #0d1f1a; border: 1px solid #1a4d2e55; }
+  .c-green::before { background: linear-gradient(90deg, var(--green), var(--teal)); }
+  .c-green h3 { color: var(--green); }
+
+  .c-red { background: #1f0d0d; border: 1px solid #4d1a1a55; }
+  .c-red::before { background: linear-gradient(90deg, var(--red), var(--amber)); }
+  .c-red h3 { color: var(--red); }
+
+  .c-teal { background: #0d1a1a; border: 1px solid #1a4d4d55; }
+  .c-teal::before { background: linear-gradient(90deg, var(--teal), var(--green)); }
+  .c-teal h3 { color: var(--teal); }
+
+  /* ── TURN WALKTHROUGH ── */
+  .turn {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    margin-bottom: 16px;
+  }
+  .turn-badge {
+    min-width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .turn-badge .tn { font-size: 1.4rem; font-weight: 900; }
+  .turn-badge .tl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .turn-body {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .turn-body h4 { font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; }
+  .turn-body p { font-size: 0.82rem; color: #888; line-height: 1.7; }
+  .cost-tag { color: var(--green); font-weight: 600; }
+
+  .footer {
+    text-align: center;
+    padding: 30px 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<div class="header">
+  <div class="tag">Pillar 2 — Most Innovative</div>
+  <h1><span class="gr">Jan Suraksha</span> Bot</h1>
+  <p>LangGraph cyclic agent with legal RAG, multilingual complaint filing, and real government templates — all in under 3 LLM calls per turn.</p>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="n" style="color:var(--amber);">3</div><div class="l">Max LLM Calls / Turn</div></div>
+  <div class="stat"><div class="n" style="color:var(--purple);">108</div><div class="l">Legal Chunks (RAG)</div></div>
+  <div class="stat"><div class="n" style="color:var(--green);">18</div><div class="l">Incident Categories</div></div>
+  <div class="stat"><div class="n" style="color:var(--blue);">3</div><div class="l">Languages</div></div>
+  <div class="stat"><div class="n" style="color:var(--red);">4</div><div class="l">Govt Templates</div></div>
+</div>
+
+<hr class="div">
+
+<!-- ════ FLOWCHART (Pure SVG) ════ -->
+<div class="flow-wrap">
+  <div class="flow-title">Complete Agent Flow</div>
+
+  <svg class="diagram-svg" viewBox="0 0 960 920" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#4a9eed"/></marker>
+      <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#8b5cf6"/></marker>
+      <marker id="arrowAmber" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/></marker>
+      <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/></marker>
+      <marker id="arrowTeal" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#14b8a6"/></marker>
+      <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/></marker>
+      <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+
+    <!-- ═══ LAYER 1: USER INPUT (Blue zone) ═══ -->
+    <rect x="20" y="10" width="920" height="110" rx="14" fill="#0d1a2e" stroke="#1e3a5f" stroke-width="1" opacity="0.5"/>
+    <text x="36" y="32" fill="#4a9eed" font-size="11" font-weight="700" font-family="Inter" letter-spacing="1" text-transform="uppercase">USER INPUT LAYER</text>
+
+    <!-- User circle -->
+    <circle cx="75" cy="75" r="30" fill="#1e3a5f" stroke="#4a9eed" stroke-width="2"/>
+    <text x="75" y="72" text-anchor="middle" fill="#a5d8ff" font-size="11" font-weight="700" font-family="Inter">User</text>
+    <text x="75" y="86" text-anchor="middle" fill="#6b8db5" font-size="9" font-family="Inter">EN|HI|MR</text>
+
+    <!-- Arrow: User → API -->
+    <line x1="105" y1="75" x2="170" y2="75" stroke="#4a9eed" stroke-width="2" marker-end="url(#arrowBlue)"/>
+    <text x="130" y="67" fill="#6b8db5" font-size="10" font-family="Inter">message</text>
+
+    <!-- API box -->
+    <rect x="175" y="50" width="145" height="50" rx="10" fill="#142640" stroke="#4a9eed" stroke-width="1.5"/>
+    <text x="248" y="72" text-anchor="middle" fill="#a5d8ff" font-size="12" font-weight="700" font-family="Inter">POST /bot/chat</text>
+    <text x="248" y="88" text-anchor="middle" fill="#6b8db5" font-size="10" font-family="Inter">FastAPI endpoint</text>
+
+    <!-- Arrow: API → run_agent -->
+    <line x1="320" y1="75" x2="385" y2="75" stroke="#4a9eed" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+    <!-- run_agent box -->
+    <rect x="390" y="50" width="170" height="50" rx="10" fill="#142640" stroke="#4a9eed" stroke-width="1.5"/>
+    <text x="475" y="72" text-anchor="middle" fill="#a5d8ff" font-size="12" font-weight="700" font-family="Inter">run_agent()</text>
+    <text x="475" y="88" text-anchor="middle" fill="#6b8db5" font-size="10" font-family="Inter">Reset per-turn flags</text>
+
+    <!-- Arrow: run_agent → LangGraph -->
+    <line x1="560" y1="75" x2="640" y2="75" stroke="#4a9eed" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+    <!-- LangGraph box -->
+    <rect x="645" y="45" width="180" height="60" rx="10" fill="#1e1445" stroke="#8b5cf6" stroke-width="2"/>
+    <text x="735" y="72" text-anchor="middle" fill="#d0bfff" font-size="13" font-weight="800" font-family="Inter">LangGraph</text>
+    <text x="735" y="90" text-anchor="middle" fill="#9580c0" font-size="10" font-family="Inter">MemorySaver (per user)</text>
+
+    <!-- ═══ LAYER 2: AGENT (Purple zone) ═══ -->
+    <rect x="20" y="140" width="920" height="370" rx="14" fill="#120a22" stroke="#2d1b69" stroke-width="1" opacity="0.4"/>
+    <text x="36" y="162" fill="#8b5cf6" font-size="11" font-weight="700" font-family="Inter" letter-spacing="1">LANGGRAPH AGENT — CYCLIC STATE MACHINE</text>
+
+    <!-- Arrow: LangGraph → Manager -->
+    <path d="M735,105 L735,140 L480,185" stroke="#8b5cf6" stroke-width="2" fill="none" marker-end="url(#arrowPurple)"/>
+    <text x="620" y="155" fill="#8b5cf6" font-size="11" font-weight="600" font-family="Inter">START</text>
+
+    <!-- ═══ MANAGER DIAMOND ═══ -->
+    <polygon points="480,190 620,250 480,310 340,250" fill="#2a1f0a" stroke="#f59e0b" stroke-width="2.5"/>
+    <text x="480" y="245" text-anchor="middle" fill="#ffd8a8" font-size="15" font-weight="900" font-family="Inter">MANAGER</text>
+    <text x="480" y="265" text-anchor="middle" fill="#c4a050" font-size="10" font-weight="600" font-family="Inter">Pure Python · Zero LLM</text>
+
+    <!-- ═══ CLASSIFY NODE ═══ -->
+    <!-- Arrow: Manager → Classify -->
+    <path d="M370,270 L180,350" stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#arrowAmber)"/>
+    <text x="240" y="300" fill="#f59e0b" font-size="10" font-weight="600" font-family="Inter">not classified yet</text>
+
+    <rect x="70" y="355" width="220" height="75" rx="12" fill="#2d1b69" stroke="#8b5cf6" stroke-width="2"/>
+    <rect x="230" y="348" width="55" height="20" rx="4" fill="#8b5cf6"/>
+    <text x="258" y="362" text-anchor="middle" fill="white" font-size="9" font-weight="800" font-family="Inter">1 LLM</text>
+    <text x="180" y="380" text-anchor="middle" fill="#d0bfff" font-size="14" font-weight="800" font-family="Inter">CLASSIFY</text>
+    <text x="180" y="398" text-anchor="middle" fill="#9580c0" font-size="10" font-family="Inter">GPT-4o-mini · JSON output</text>
+    <text x="180" y="416" text-anchor="middle" fill="#7a6aa0" font-size="9" font-family="Inter">type + severity + intent + entities</text>
+
+    <!-- Return arrow: Classify → Manager -->
+    <path d="M180,355 L180,330 L400,240" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,4" fill="none" marker-end="url(#arrowAmber)" opacity="0.6"/>
+
+    <!-- ═══ EXECUTE NODE ═══ -->
+    <!-- Arrow: Manager → Execute -->
+    <line x1="480" y1="310" x2="480" y2="350" stroke="#22c55e" stroke-width="2" marker-end="url(#arrowGreen)"/>
+    <text x="495" y="335" fill="#22c55e" font-size="10" font-weight="600" font-family="Inter">action chosen</text>
+
+    <rect x="370" y="355" width="220" height="75" rx="12" fill="#1a4d2e" stroke="#22c55e" stroke-width="2"/>
+    <rect x="530" y="348" width="55" height="20" rx="4" fill="#22c55e"/>
+    <text x="558" y="362" text-anchor="middle" fill="white" font-size="9" font-weight="800" font-family="Inter">2 LLM</text>
+    <text x="480" y="380" text-anchor="middle" fill="#b2f2bb" font-size="14" font-weight="800" font-family="Inter">EXECUTE</text>
+    <text x="480" y="398" text-anchor="middle" fill="#7ac49a" font-size="10" font-family="Inter">FIR summary + template fill</text>
+    <text x="480" y="416" text-anchor="middle" fill="#5a9a7a" font-size="9" font-family="Inter">Save to SQLite · Ref: RM-DATE-HEX</text>
+
+    <!-- Return arrow: Execute → Manager -->
+    <path d="M420,355 L420,325 L450,250" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="6,4" fill="none" marker-end="url(#arrowGreen)" opacity="0.6"/>
+
+    <!-- ═══ RESPOND NODE ═══ -->
+    <!-- Arrow: Manager → Respond -->
+    <path d="M590,270 L780,350" stroke="#8b5cf6" stroke-width="2" fill="none" marker-end="url(#arrowPurple)"/>
+    <text x="680" y="300" fill="#8b5cf6" font-size="10" font-weight="600" font-family="Inter">need info / options</text>
+
+    <rect x="670" y="355" width="220" height="75" rx="12" fill="#1e3a5f" stroke="#4a9eed" stroke-width="2"/>
+    <rect x="830" y="348" width="55" height="20" rx="4" fill="#4a9eed"/>
+    <text x="858" y="362" text-anchor="middle" fill="white" font-size="9" font-weight="800" font-family="Inter">1 LLM</text>
+    <text x="780" y="380" text-anchor="middle" fill="#a5d8ff" font-size="14" font-weight="800" font-family="Inter">RESPOND</text>
+    <text x="780" y="398" text-anchor="middle" fill="#6b8db5" font-size="10" font-family="Inter">ask_details | show_options</text>
+    <text x="780" y="416" text-anchor="middle" fill="#4a7090" font-size="9" font-family="Inter">follow_up | sensitive bypass</text>
+
+    <!-- Return arrow: Respond → Manager -->
+    <path d="M780,355 L780,330 L560,240" stroke="#4a9eed" stroke-width="1.5" stroke-dasharray="6,4" fill="none" marker-end="url(#arrowBlue)" opacity="0.6"/>
+
+    <!-- "all return to manager" label -->
+    <text x="810" y="330" fill="#6b6b8a" font-size="10" font-style="italic" font-family="Inter">all nodes return</text>
+    <text x="810" y="342" fill="#6b6b8a" font-size="10" font-style="italic" font-family="Inter">to manager</text>
+
+    <!-- ═══ DONE → RESPONSE ═══ -->
+    <rect x="400" y="460" width="160" height="40" rx="10" fill="#1a4d2e" stroke="#22c55e" stroke-width="2"/>
+    <text x="480" y="485" text-anchor="middle" fill="#b2f2bb" font-size="11" font-weight="700" font-family="Inter">response_ready = True</text>
+
+    <!-- Arrow: Manager → Done (merged with execute arrow visually) -->
+    <path d="M480,430 L480,460" stroke="#22c55e" stroke-width="2" marker-end="url(#arrowGreen)"/>
+    <text x="495" y="450" fill="#22c55e" font-size="10" font-weight="600" font-family="Inter">done</text>
+
+    <!-- Arrow: Done → User (response back) -->
+    <path d="M400,480 Q200,480 90,200 L75,110" stroke="#22c55e" stroke-width="2" stroke-dasharray="8,4" fill="none" marker-end="url(#arrowGreen)" opacity="0.7"/>
+    <text x="160" y="440" fill="#22c55e" font-size="11" font-weight="700" font-family="Inter">ChatResponse</text>
+    <text x="160" y="455" fill="#5a9a7a" font-size="9" font-family="Inter">response + options + draft + ref</text>
+
+    <!-- ═══ LAYER 3: DATA & TOOLS (Green zone) ═══ -->
+    <rect x="20" y="530" width="920" height="200" rx="14" fill="#081510" stroke="#1a4d2e" stroke-width="1" opacity="0.4"/>
+    <text x="36" y="552" fill="#22c55e" font-size="11" font-weight="700" font-family="Inter" letter-spacing="1">DATA &amp; TOOL LAYER</text>
+
+    <!-- SQLite -->
+    <rect x="40" y="570" width="150" height="65" rx="10" fill="#10352a" stroke="#14b8a6" stroke-width="1.5"/>
+    <text x="115" y="593" text-anchor="middle" fill="#b2f2bb" font-size="12" font-weight="700" font-family="Inter">SQLite</text>
+    <text x="115" y="610" text-anchor="middle" fill="#6ba88a" font-size="10" font-family="Inter">Users + Complaints</text>
+    <text x="115" y="624" text-anchor="middle" fill="#4a7a6a" font-size="9" font-family="Inter">Zero cloud dependency</text>
+
+    <!-- Zilliz -->
+    <rect x="210" y="570" width="155" height="65" rx="10" fill="#10352a" stroke="#14b8a6" stroke-width="1.5"/>
+    <text x="288" y="593" text-anchor="middle" fill="#b2f2bb" font-size="12" font-weight="700" font-family="Inter">Zilliz / Milvus</text>
+    <text x="288" y="610" text-anchor="middle" fill="#6ba88a" font-size="10" font-family="Inter">108 legal chunks</text>
+    <text x="288" y="624" text-anchor="middle" fill="#4a7a6a" font-size="9" font-family="Inter">1536-dim embeddings</text>
+
+    <!-- Authority Map -->
+    <rect x="385" y="570" width="155" height="65" rx="10" fill="#10352a" stroke="#14b8a6" stroke-width="1.5"/>
+    <text x="463" y="590" text-anchor="middle" fill="#b2f2bb" font-size="12" font-weight="700" font-family="Inter">AUTHORITY_MAP</text>
+    <text x="463" y="607" text-anchor="middle" fill="#6ba88a" font-size="10" font-family="Inter">Rule-based routing</text>
+    <text x="463" y="624" text-anchor="middle" fill="#22c55e" font-size="9" font-weight="700" font-family="Inter">ZERO LLM</text>
+
+    <!-- Templates -->
+    <rect x="560" y="570" width="155" height="65" rx="10" fill="#10352a" stroke="#14b8a6" stroke-width="1.5"/>
+    <text x="638" y="590" text-anchor="middle" fill="#b2f2bb" font-size="12" font-weight="700" font-family="Inter">Templates</text>
+    <text x="638" y="607" text-anchor="middle" fill="#6ba88a" font-size="10" font-family="Inter">FIR | CPGRAMS</text>
+    <text x="638" y="624" text-anchor="middle" fill="#6ba88a" font-size="9" font-family="Inter">RCT | Rail Madad</text>
+
+    <!-- Sensitive Bypass -->
+    <rect x="735" y="570" width="170" height="65" rx="10" fill="#2a0a0a" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="820" y="590" text-anchor="middle" fill="#ffc9c9" font-size="12" font-weight="700" font-family="Inter">Sensitive Bypass</text>
+    <text x="820" y="607" text-anchor="middle" fill="#c47070" font-size="10" font-family="Inter">Regex + Pre-written</text>
+    <text x="820" y="624" text-anchor="middle" fill="#ef4444" font-size="9" font-weight="700" font-family="Inter">Skips Azure Filter</text>
+
+    <!-- Dashed arrows from nodes to data layer -->
+    <line x1="130" y1="430" x2="115" y2="570" stroke="#14b8a6" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrowTeal)" opacity="0.5"/>
+    <line x1="200" y1="430" x2="288" y2="570" stroke="#14b8a6" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrowTeal)" opacity="0.5"/>
+    <line x1="230" y1="425" x2="463" y2="570" stroke="#14b8a6" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrowTeal)" opacity="0.5"/>
+    <line x1="520" y1="430" x2="638" y2="570" stroke="#14b8a6" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrowTeal)" opacity="0.5"/>
+    <line x1="820" y1="430" x2="820" y2="570" stroke="#ef4444" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrowRed)" opacity="0.5"/>
+
+    <!-- ═══ DETAIL BOXES ═══ -->
+    <rect x="40" y="660" width="430" height="130" rx="12" fill="#1f170d" stroke="#f59e0b" stroke-width="1" opacity="0.8"/>
+    <text x="60" y="685" fill="#ffd8a8" font-size="13" font-weight="800" font-family="Inter">CLASSIFY extracts:</text>
+    <text x="60" y="705" fill="#c4a050" font-size="11" font-family="Inter">- incident_type (18 categories: theft, assault, ...)</text>
+    <text x="60" y="722" fill="#c4a050" font-size="11" font-family="Inter">- severity (low / medium / high / critical)</text>
+    <text x="60" y="739" fill="#c4a050" font-size="11" font-family="Inter">- user_intent (7 actions: file, rights, status, ...)</text>
+    <text x="60" y="756" fill="#c4a050" font-size="11" font-family="Inter">- entities (station, time, items, injuries, accused)</text>
+    <text x="60" y="776" fill="#8a7a40" font-size="10" font-style="italic" font-family="Inter">+ Merges on re-entry · Skips legal retrieval if cached</text>
+
+    <rect x="490" y="660" width="430" height="130" rx="12" fill="#0d1f1a" stroke="#22c55e" stroke-width="1" opacity="0.8"/>
+    <text x="510" y="685" fill="#b2f2bb" font-size="13" font-weight="800" font-family="Inter">EXECUTE pipeline:</text>
+    <text x="510" y="705" fill="#7ac49a" font-size="11" font-family="Inter">1. LLM generates formal FIR incident summary</text>
+    <text x="510" y="722" fill="#7ac49a" font-size="11" font-family="Inter">2. Slot-fills real govt template (zero LLM)</text>
+    <text x="510" y="739" fill="#7ac49a" font-size="11" font-family="Inter">3. Generates ref: RM-YYYYMMDD-XXXXXX</text>
+    <text x="510" y="756" fill="#7ac49a" font-size="11" font-family="Inter">4. LLM writes conversational summary</text>
+    <text x="510" y="776" fill="#4a7a6a" font-size="10" font-style="italic" font-family="Inter">5. Saves to SQLite · Returns draft + ref + authority</text>
+
+    <!-- ═══ CONNECTIONS LEGEND ═══ -->
+    <rect x="40" y="810" width="880" height="55" rx="10" fill="var(--surface)" stroke="var(--border)" stroke-width="1"/>
+    <text x="80" y="835" fill="#4a9eed" font-size="10" font-weight="700" font-family="Inter">━━  Solid = forward flow</text>
+    <text x="280" y="835" fill="#f59e0b" font-size="10" font-weight="700" font-family="Inter">╌╌  Dashed = return to manager</text>
+    <text x="520" y="835" fill="#14b8a6" font-size="10" font-weight="700" font-family="Inter">╌╌  Thin dashed = data queries</text>
+    <text x="750" y="835" fill="#ef4444" font-size="10" font-weight="700" font-family="Inter">╌╌  Red = sensitive bypass</text>
+    <line x1="55" y1="850" x2="900" y2="850" stroke="none"/>
+  </svg>
+</div>
+
+<hr class="div">
+
+<!-- ════ NODE BREAKDOWN ════ -->
+<div class="section">
+  <h2>Node Breakdown</h2>
+  <div class="grid3">
+    <div class="card c-amber">
+      <h3><span class="badge" style="background:#f59e0b22;color:var(--amber);">Core</span> Manager</h3>
+      <p><strong>Pure Python, zero LLM.</strong> Reads actual state (entities, context, message history) and routes to classify, execute, or respond. Runs <strong>multiple times per turn</strong> until <code>response_ready = True</code>. Shortcuts: if user picks "1", skips classify entirely.</p>
+    </div>
+    <div class="card c-purple">
+      <h3><span class="badge" style="background:#8b5cf622;color:var(--purple);">1 LLM</span> Classify</h3>
+      <p>Single GPT-4o-mini call extracts incident type (18 categories), severity, user intent (7 actions), and structured entities. <strong>Merges on re-entry</strong> (doesn't overwrite). Retrieves 5 legal chunks from Zilliz filtered by type + Mumbai jurisdiction. Skips if cached.</p>
+    </div>
+    <div class="card c-green">
+      <h3><span class="badge" style="background:#22c55e22;color:var(--green);">2 LLM</span> Execute</h3>
+      <p><strong>Call 1:</strong> FIR summary + compensation from legal RAG. <strong>Call 2:</strong> Conversational summary. <strong>Zero LLM:</strong> Slot-fills GRP FIR / CPGRAMS / RCT Form II / Rail Madad templates. Generates tracking ref. Saves to SQLite.</p>
+    </div>
+    <div class="card c-blue">
+      <h3><span class="badge" style="background:#4a9eed22;color:var(--blue);">1 LLM</span> Respond</h3>
+      <p>Three modes: <strong>ask_details</strong> (missing info), <strong>show_options</strong> (action buttons), <strong>follow_up</strong> (conversation). For sensitive content: <strong>pre-written responses in 3 languages</strong> — zero LLM, bypasses Azure content filter.</p>
+    </div>
+    <div class="card c-teal">
+      <h3><span class="badge" style="background:#14b8a622;color:var(--teal);">Data</span> Tool Layer</h3>
+      <p><strong>SQLite:</strong> Users + complaints (zero cloud). <strong>Zilliz:</strong> 108 legal chunks (IPC, Railways Act, RCT). <strong>AUTHORITY_MAP:</strong> Deterministic routing — theft→GRP, harassment→182, accident→RCT. Zero LLM needed.</p>
+    </div>
+    <div class="card c-red">
+      <h3><span class="badge" style="background:#ef444422;color:var(--red);">Safety</span> Sensitive Bypass</h3>
+      <p>Sexual harassment reports trigger <strong>regex classification + pre-written empathetic responses</strong> in EN/HI/MR. Zero LLM calls. Completely avoids Azure content filter. Entity extraction via regex, not LLM.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- ════ WALKTHROUGH ════ -->
+<div class="section">
+  <h2>Example: 3-Turn Conversation</h2>
+
+  <div class="turn">
+    <div class="turn-badge" style="background:#1a1030;">
+      <div class="tn" style="color:var(--purple);">T1</div>
+      <div class="tl">Turn 1</div>
+    </div>
+    <div class="turn-body">
+      <h4 style="color:var(--purple);">User reports theft in Hindi</h4>
+      <p>
+        <code>"mera phone chori ho gaya Andheri station pe shaam 6 baje"</code><br><br>
+        Manager → <strong>Classify</strong> (1 LLM): extracts theft, Andheri, 6 PM, phone →
+        Legal RAG: retrieves IPC 379 + compensation rules →
+        Rule-based: authority = GRP, actions = [file_complaint, know_rights, know_authority]<br>
+        Manager → <strong>Respond</strong> (1 LLM): empathetic message + 3 action buttons<br>
+        <span class="cost-tag">Cost: 2 LLM + 1 embed</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="turn">
+    <div class="turn-badge" style="background:#1f170d;">
+      <div class="tn" style="color:var(--amber);">T2</div>
+      <div class="tl">Turn 2</div>
+    </div>
+    <div class="turn-body">
+      <h4 style="color:var(--amber);">User picks "1" (file complaint)</h4>
+      <p>
+        Manager <strong>shortcut</strong>: detects numbered choice, skips classify entirely →
+        checks <code>_has_enough_details()</code> → True (2+ messages, has station + time + items)<br>
+        Manager → <strong>Execute</strong> (2 LLM): FIR summary + conversational response →
+        Slot-fills GRP FIR template (zero LLM) → Saves to SQLite with ref <code>RM-20260301-A3F2C1</code><br>
+        <span class="cost-tag">Cost: 2 LLM (saved 1 by skipping classify)</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="turn">
+    <div class="turn-badge" style="background:#0d1a2e;">
+      <div class="tn" style="color:var(--blue);">T3</div>
+      <div class="tl">Turn 3</div>
+    </div>
+    <div class="turn-body">
+      <h4 style="color:var(--blue);">User asks follow-up</h4>
+      <p>
+        <code>"ab mujhe kya karna chahiye?"</code><br><br>
+        Manager → Classify (1 LLM): re-entry, keeps prior incident_type (theft), reuses legal_context (skips embed)<br>
+        Manager → <strong>Respond</strong> (1 LLM): follow_up mode with full message history<br>
+        <span class="cost-tag">Cost: 1 LLM (reused context, no embed)</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- ════ WHY THIS WINS ════ -->
+<div class="section">
+  <h2>Why This Architecture Wins</h2>
+  <div class="grid3">
+    <div class="card c-red">
+      <h3>Zero Hallucination</h3>
+      <p>Templates are <strong>slot-filled, not LLM-generated</strong>. Actual GRP FIR, CPGRAMS, RCT Form II. IPC sections from vector retrieval, not LLM memory. The system <em>cannot</em> invent a law.</p>
+    </div>
+    <div class="card c-green">
+      <h3>Graceful Degradation</h3>
+      <p>OpenAI down? Rule-based fallbacks. Zilliz down? Still classifies + routes to authority. Sensitive content? Pre-written responses, zero LLM. <strong>Nothing crashes.</strong></p>
+    </div>
+    <div class="card c-purple">
+      <h3>Cyclic Manager Pattern</h3>
+      <p>No phases. Manager reads <strong>actual state</strong> to route. Runs multiple times per turn. All decisions in one place. Deterministic Python — predictable, debuggable, fast.</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <strong>RailFlow</strong> — Jan Suraksha Bot Architecture — mIndicator AI Hackathon 2026<br>
+  Bhoomi + Dhruv
+</div>
+
+</body>
+</html>
