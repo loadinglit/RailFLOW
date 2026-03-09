@@ -484,10 +484,6 @@ NEO4J_URI=neo4j+s://xxxxxxxx.databases.neo4j.io
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=your_password
 
-# OpenAI (GPT-4o-mini + text-embedding-3-small)
-OPENAI_API_KEY=sk-xxxx
-OPENAI_BASE_URL=                    # Optional: LiteLLM proxy URL
-
 # OpenWeatherMap (free tier: 1000 calls/day)
 OPENWEATHERMAP_KEY=xxxx
 
